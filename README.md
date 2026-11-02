@@ -13,7 +13,7 @@ bun add
 For example, to add the map library:
 
 ```sh
-bun add mablibre-gl
+bun add maplibre-gl
 ```
 
 ## Developing
@@ -24,7 +24,7 @@ Once you've created a project and installed dependencies with `bun install`, sta
 bun run dev
 
 # or start the server and open the app in a new browser tab (Recommended)
-npm run dev -- --open
+bun run dev -- --open
 ```
 
 ## Building
@@ -52,7 +52,7 @@ src/
     +page.svelte                  # RouteFinderPage (top-level UI coordinator)
   lib/
     ui/                           # UI / Map subsystem
-      components/
+      components/****
         CampusMap.svelte
         BuildingSelector.svelte
         RoutingModeSelector.svelte
