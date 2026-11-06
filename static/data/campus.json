@@ -1,0 +1,470 @@
+{
+ "_note": "DUMMY test data for the Increment 1 vertical slice (not real UTEP geometry). Includes a stairs shortcut, a steep non-stair path, an accessible ramp detour, an inaccessible side entrance, and a disconnected building (b_annex) for no-route cases.",
+ "nodes": [
+  {
+   "id": "n_union",
+   "lat": 31.77,
+   "lng": -106.504,
+   "elevationM": 1134
+  },
+  {
+   "id": "n_plaza",
+   "lat": 31.7704,
+   "lng": -106.504,
+   "elevationM": 1134.5
+  },
+  {
+   "id": "n_walk_w",
+   "lat": 31.7704,
+   "lng": -106.5047,
+   "elevationM": 1135
+  },
+  {
+   "id": "n_stairs_base",
+   "lat": 31.7706,
+   "lng": -106.505,
+   "elevationM": 1135.5
+  },
+  {
+   "id": "n_stairs_top",
+   "lat": 31.771,
+   "lng": -106.505,
+   "elevationM": 1139
+  },
+  {
+   "id": "n_eng_door",
+   "lat": 31.7712,
+   "lng": -106.505,
+   "elevationM": 1140
+  },
+  {
+   "id": "n_ramp_a",
+   "lat": 31.7707,
+   "lng": -106.5036,
+   "elevationM": 1135.5
+  },
+  {
+   "id": "n_ramp_b",
+   "lat": 31.7712,
+   "lng": -106.5042,
+   "elevationM": 1137.5
+  },
+  {
+   "id": "n_library",
+   "lat": 31.7712,
+   "lng": -106.5033,
+   "elevationM": 1136
+  },
+  {
+   "id": "n_uli",
+   "lat": 31.7704,
+   "lng": -106.503,
+   "elevationM": 1134.5
+  },
+  {
+   "id": "n_sci",
+   "lat": 31.7712,
+   "lng": -106.5058,
+   "elevationM": 1140
+  },
+  {
+   "id": "n_gym",
+   "lat": 31.7696,
+   "lng": -106.5046,
+   "elevationM": 1133
+  },
+  {
+   "id": "n_island",
+   "lat": 31.769,
+   "lng": -106.502,
+   "elevationM": 1130
+  }
+ ],
+ "edges": [
+  {
+   "id": "e_union_plaza",
+   "fromId": "n_union",
+   "toId": "n_plaza",
+   "distanceM": 44.5,
+   "slopePct": 1.1,
+   "hasStairs": false,
+   "hasRamp": false,
+   "isAccessible": true
+  },
+  {
+   "id": "e_plaza_walk",
+   "fromId": "n_plaza",
+   "toId": "n_walk_w",
+   "distanceM": 66.2,
+   "slopePct": 0.8,
+   "hasStairs": false,
+   "hasRamp": false,
+   "isAccessible": true
+  },
+  {
+   "id": "e_walk_base",
+   "fromId": "n_walk_w",
+   "toId": "n_stairs_base",
+   "distanceM": 36.1,
+   "slopePct": 1.4,
+   "hasStairs": false,
+   "hasRamp": false,
+   "isAccessible": true
+  },
+  {
+   "id": "e_stairs",
+   "fromId": "n_stairs_base",
+   "toId": "n_stairs_top",
+   "distanceM": 44.5,
+   "slopePct": 7.9,
+   "hasStairs": true,
+   "hasRamp": false,
+   "isAccessible": false
+  },
+  {
+   "id": "e_hill",
+   "fromId": "n_stairs_base",
+   "toId": "n_stairs_top",
+   "distanceM": 46.0,
+   "slopePct": 7.6,
+   "hasStairs": false,
+   "hasRamp": false,
+   "isAccessible": false
+  },
+  {
+   "id": "e_top_eng",
+   "fromId": "n_stairs_top",
+   "toId": "n_eng_door",
+   "distanceM": 22.3,
+   "slopePct": 4.5,
+   "hasStairs": false,
+   "hasRamp": false,
+   "isAccessible": true
+  },
+  {
+   "id": "e_plaza_ramp",
+   "fromId": "n_plaza",
+   "toId": "n_ramp_a",
+   "distanceM": 50.5,
+   "slopePct": 2.0,
+   "hasStairs": false,
+   "hasRamp": false,
+   "isAccessible": true
+  },
+  {
+   "id": "e_ramp_ab",
+   "fromId": "n_ramp_a",
+   "toId": "n_ramp_b",
+   "distanceM": 79.5,
+   "slopePct": 2.5,
+   "hasStairs": false,
+   "hasRamp": true,
+   "isAccessible": true
+  },
+  {
+   "id": "e_ramp_eng",
+   "fromId": "n_ramp_b",
+   "toId": "n_eng_door",
+   "distanceM": 75.7,
+   "slopePct": 3.3,
+   "hasStairs": false,
+   "hasRamp": false,
+   "isAccessible": true
+  },
+  {
+   "id": "e_ramp_lib",
+   "fromId": "n_ramp_a",
+   "toId": "n_library",
+   "distanceM": 62.5,
+   "slopePct": 0.8,
+   "hasStairs": false,
+   "hasRamp": false,
+   "isAccessible": true
+  },
+  {
+   "id": "e_plaza_uli",
+   "fromId": "n_plaza",
+   "toId": "n_uli",
+   "distanceM": 94.6,
+   "slopePct": 0.0,
+   "hasStairs": false,
+   "hasRamp": false,
+   "isAccessible": true
+  },
+  {
+   "id": "e_eng_sci",
+   "fromId": "n_eng_door",
+   "toId": "n_sci",
+   "distanceM": 75.7,
+   "slopePct": 0.0,
+   "hasStairs": false,
+   "hasRamp": false,
+   "isAccessible": true
+  },
+  {
+   "id": "e_union_gym",
+   "fromId": "n_union",
+   "toId": "n_gym",
+   "distanceM": 72.1,
+   "slopePct": -1.4,
+   "hasStairs": false,
+   "hasRamp": false,
+   "isAccessible": true
+  }
+ ],
+ "buildings": [
+  {
+   "id": "b_union",
+   "name": "Union Building",
+   "footprint": [
+    [
+     -106.5041,
+     31.77004
+    ],
+    [
+     -106.5039,
+     31.77004
+    ],
+    [
+     -106.5039,
+     31.7702
+    ],
+    [
+     -106.5041,
+     31.7702
+    ],
+    [
+     -106.5041,
+     31.77004
+    ]
+   ],
+   "centroid": [
+    -106.504,
+    31.77012
+   ]
+  },
+  {
+   "id": "b_library",
+   "name": "Centennial Library",
+   "footprint": [
+    [
+     -106.5034,
+     31.77124
+    ],
+    [
+     -106.5032,
+     31.77124
+    ],
+    [
+     -106.5032,
+     31.7714
+    ],
+    [
+     -106.5034,
+     31.7714
+    ],
+    [
+     -106.5034,
+     31.77124
+    ]
+   ],
+   "centroid": [
+    -106.5033,
+    31.77132
+   ]
+  },
+  {
+   "id": "b_eng",
+   "name": "Engineering Building",
+   "footprint": [
+    [
+     -106.5051,
+     31.77124
+    ],
+    [
+     -106.5049,
+     31.77124
+    ],
+    [
+     -106.5049,
+     31.7714
+    ],
+    [
+     -106.5051,
+     31.7714
+    ],
+    [
+     -106.5051,
+     31.77124
+    ]
+   ],
+   "centroid": [
+    -106.505,
+    31.77132
+   ]
+  },
+  {
+   "id": "b_sci",
+   "name": "Science Building",
+   "footprint": [
+    [
+     -106.5059,
+     31.77124
+    ],
+    [
+     -106.5057,
+     31.77124
+    ],
+    [
+     -106.5057,
+     31.7714
+    ],
+    [
+     -106.5059,
+     31.7714
+    ],
+    [
+     -106.5059,
+     31.77124
+    ]
+   ],
+   "centroid": [
+    -106.5058,
+    31.77132
+   ]
+  },
+  {
+   "id": "b_uli",
+   "name": "Undergraduate Learning Center",
+   "footprint": [
+    [
+     -106.5031,
+     31.77044
+    ],
+    [
+     -106.5029,
+     31.77044
+    ],
+    [
+     -106.5029,
+     31.7706
+    ],
+    [
+     -106.5031,
+     31.7706
+    ],
+    [
+     -106.5031,
+     31.77044
+    ]
+   ],
+   "centroid": [
+    -106.503,
+    31.77052
+   ]
+  },
+  {
+   "id": "b_gym",
+   "name": "Memorial Gym",
+   "footprint": [
+    [
+     -106.5047,
+     31.76964
+    ],
+    [
+     -106.5045,
+     31.76964
+    ],
+    [
+     -106.5045,
+     31.7698
+    ],
+    [
+     -106.5047,
+     31.7698
+    ],
+    [
+     -106.5047,
+     31.76964
+    ]
+   ],
+   "centroid": [
+    -106.5046,
+    31.76972
+   ]
+  },
+  {
+   "id": "b_annex",
+   "name": "Remote Annex",
+   "footprint": [
+    [
+     -106.5021,
+     31.76904
+    ],
+    [
+     -106.5019,
+     31.76904
+    ],
+    [
+     -106.5019,
+     31.7692
+    ],
+    [
+     -106.5021,
+     31.7692
+    ],
+    [
+     -106.5021,
+     31.76904
+    ]
+   ],
+   "centroid": [
+    -106.502,
+    31.76912
+   ]
+  }
+ ],
+ "entrances": [
+  {
+   "id": "en_union_main",
+   "buildingId": "b_union",
+   "nodeId": "n_union"
+  },
+  {
+   "id": "en_library_main",
+   "buildingId": "b_library",
+   "nodeId": "n_library"
+  },
+  {
+   "id": "en_eng_main",
+   "buildingId": "b_eng",
+   "nodeId": "n_eng_door"
+  },
+  {
+   "id": "en_eng_side",
+   "buildingId": "b_eng",
+   "nodeId": "n_stairs_top",
+   "isAccessible": false
+  },
+  {
+   "id": "en_sci_main",
+   "buildingId": "b_sci",
+   "nodeId": "n_sci"
+  },
+  {
+   "id": "en_uli_main",
+   "buildingId": "b_uli",
+   "nodeId": "n_uli"
+  },
+  {
+   "id": "en_gym_main",
+   "buildingId": "b_gym",
+   "nodeId": "n_gym"
+  },
+  {
+   "id": "en_annex_main",
+   "buildingId": "b_annex",
+   "nodeId": "n_island"
+  }
+ ]
+}
