@@ -56,6 +56,57 @@ export interface Entrance {
 	readonly isAccessible: boolean;
 }
 
+/* ---------- Routing-facing shapes (SDD CG-2 / CG-3 / CD-4), produced by RoutingGraphAdapter ---------- */
+
+/** Accessibility of a path or entrance. 'unknown' means the source data does not say. */
+export type AccessibilityStatus = 'accessible' | 'inaccessible' | 'unknown';
+
+export interface AccessibilityInfo {
+	readonly status: AccessibilityStatus;
+}
+
+/** A graph node as Routing reads it (CG-2). */
+export interface RoutingNode {
+	readonly id: string;
+	readonly location: LngLat;
+}
+
+/** One directed path segment as Routing reads it. Facts only; costs belong to Routing. */
+export interface RoutingEdge {
+	readonly id: string;
+	readonly fromNodeId: string;
+	readonly toNodeId: string;
+	/** 'steps' for a staircase, otherwise 'path'. */
+	readonly kind: string;
+	/** Points from fromNodeId to toNodeId, in [lng, lat] order. */
+	readonly geometry: readonly LngLat[];
+	readonly hasStairs: boolean | null;
+	/** Number of steps, or null when unknown. */
+	readonly stepCount: number | null;
+	readonly hasRamp: boolean;
+	readonly accessibility: AccessibilityInfo;
+}
+
+/** A path resolved for one direction of travel (CG-3). Signed values are null when unknown. */
+export interface PathTraversal {
+	readonly edge: RoutingEdge;
+	readonly fromNodeId: string;
+	readonly toNodeId: string;
+	readonly distanceM: number;
+	readonly elevationChangeM: number | null;
+	readonly gradePercent: number | null;
+}
+
+/** A building entrance as Routing reads it (CD-4). */
+export interface RoutingEntrance {
+	readonly id: string;
+	readonly buildingId: string;
+	readonly nodeId: string;
+	/** Whether the entrance has steps, or null when unknown. */
+	readonly hasSteps: boolean | null;
+	readonly accessibility: AccessibilityInfo;
+}
+
 /* ---------- Raw (OSM-derived / file) shapes returned by a CampusDataSource ---------- */
 
 export interface RawNode {

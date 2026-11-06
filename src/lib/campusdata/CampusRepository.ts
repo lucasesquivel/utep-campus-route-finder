@@ -1,11 +1,21 @@
 import { CampusGraph } from './CampusGraph';
 import type { CampusDataSource } from './CampusDataSource';
 import { CampusDataError, DataLoadError, MalformedDataError, NotFoundError } from './errors';
-import type { Building, BuildingFeatureCollection, Entrance, PathEdge, RawBuilding, RawCampusData } from './types';
+import { RoutingGraphAdapter } from './RoutingGraphAdapter';
+import type {
+	Building,
+	BuildingFeatureCollection,
+	Entrance,
+	PathEdge,
+	RawBuilding,
+	RawCampusData,
+	RoutingEntrance
+} from './types';
 
 /**
  * Public entry point of the Campus Data subsystem.
- * Routing uses getGraph()/getNeighboringPaths(); the Controller uses getBuilding()/getEntrances().
+ * The Controller uses getBuilding()/getEntrances() and passes getRoutingGraph() and
+ * getRoutingEntrances() to Routing's RouteEngine.
  */
 export class CampusRepository {
 	private readonly source: CampusDataSource;
@@ -51,6 +61,17 @@ export class CampusRepository {
 	getBuildings(): Building[] {
 		this.assertLoaded();
 		return [...this.buildings.values()];
+	}
+
+	/** The graph in the shape Routing's RouteEngine reads (CG-2 / CG-3). */
+	getRoutingGraph(): RoutingGraphAdapter {
+		this.assertLoaded();
+		return new RoutingGraphAdapter(this.graph);
+	}
+
+	/** Entrances of a building in the shape Routing reads. Throws NotFoundError if unknown. */
+	getRoutingEntrances(buildingId: string): RoutingEntrance[] {
+		return this.getEntrances(buildingId).map(RoutingGraphAdapter.toRoutingEntrance);
 	}
 
 	/** Building footprints as GeoJSON for MapLibre. Buildings without a footprint are omitted. */

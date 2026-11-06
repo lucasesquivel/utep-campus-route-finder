@@ -1,5 +1,6 @@
 export { CampusRepository } from './CampusRepository';
 export { CampusGraph } from './CampusGraph';
+export { RoutingGraphAdapter } from './RoutingGraphAdapter';
 export type { CampusDataSource } from './CampusDataSource';
 export { StaticFileCampusDataSource } from './StaticFileCampusDataSource';
 export { OsmCampusDataSource } from './OsmCampusDataSource';

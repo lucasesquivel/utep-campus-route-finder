@@ -6,7 +6,7 @@
  * Try it: GET /campus-data-example
  */
 import { json } from '@sveltejs/kit';
-import { CampusRepository, DataLoadError, MalformedDataError, StaticFileCampusDataSource } from '../../lib/campusdata/Index.js';
+import { CampusRepository, DataLoadError, MalformedDataError, StaticFileCampusDataSource } from '#lib/campusdata/index.js';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ fetch }) => {
@@ -22,7 +22,8 @@ export const GET: RequestHandler = async ({ fetch }) => {
 		throw err;
 	}
 
-	// The Controller would hand repository.getGraph() to Routing; here we only report what was loaded.
+	// The Controller would pass repository.getRoutingGraph() and getRoutingEntrances() to Routing's
+	// RouteEngine; here we only report what was loaded.
 	const graph = repository.getGraph();
 	return json({
 		nodeCount: graph.nodeCount,
