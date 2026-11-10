@@ -4,6 +4,18 @@
  * and to keep JSON loading simple. Route-mode costs belong to Routing, not here.
  */
 
+/**
+ * Accessibility of a path or entrance. 'unknown' means the data does not say, which is the
+ * normal case for untagged OpenStreetMap footways; it is never treated as 'accessible'.
+ */
+export type AccessibilityStatus = 'accessible' | 'inaccessible' | 'unknown';
+
+/**
+ * Where an entrance comes from: 'mapped' (in the source data), 'verified' (added or confirmed
+ * by the team in the corrections file), or 'inferred' (guessed from geometry; unverified).
+ */
+export type EntranceSource = 'mapped' | 'verified' | 'inferred';
+
 export interface GraphNode {
 	readonly id: string;
 	readonly lat: number;
@@ -22,11 +34,12 @@ export interface PathEdge {
 	readonly slopePct?: number;
 	readonly hasStairs: boolean;
 	readonly hasRamp: boolean;
-	readonly isAccessible: boolean;
+	/** Stairs are always 'inaccessible'. */
+	readonly accessibility: AccessibilityStatus;
 }
 
 /** [longitude, latitude] pair (GeoJSON order, as MapLibre expects). */
-export type LngLat = [number, number];
+export type LngLat = readonly [lng: number, lat: number];
 
 export interface Building {
 	readonly id: string;
@@ -53,13 +66,12 @@ export interface Entrance {
 	readonly buildingId: string;
 	/** Graph node where this entrance connects to the path network. */
 	readonly nodeId: string;
-	readonly isAccessible: boolean;
+	readonly accessibility: AccessibilityStatus;
+	/** Inferred entrances are always 'unknown'. */
+	readonly source: EntranceSource;
 }
 
 /* ---------- Routing-facing shapes (SDD CG-2 / CG-3 / CD-4), produced by RoutingGraphAdapter ---------- */
-
-/** Accessibility of a path or entrance. 'unknown' means the source data does not say. */
-export type AccessibilityStatus = 'accessible' | 'inaccessible' | 'unknown';
 
 export interface AccessibilityInfo {
 	readonly status: AccessibilityStatus;
@@ -105,6 +117,7 @@ export interface RoutingEntrance {
 	/** Whether the entrance has steps, or null when unknown. */
 	readonly hasSteps: boolean | null;
 	readonly accessibility: AccessibilityInfo;
+	readonly source: EntranceSource;
 }
 
 /* ---------- Raw (OSM-derived / file) shapes returned by a CampusDataSource ---------- */
@@ -124,7 +137,8 @@ export interface RawEdge {
 	slopePct?: number;
 	hasStairs?: boolean;
 	hasRamp?: boolean;
-	isAccessible?: boolean;
+	/** Defaults to 'unknown', or 'inaccessible' for stairs. */
+	accessibility?: AccessibilityStatus;
 	/** Defaults to true: a reverse edge (negated slope) is created on load. */
 	bidirectional?: boolean;
 }
@@ -140,7 +154,10 @@ export interface RawEntrance {
 	id: string;
 	buildingId: string;
 	nodeId: string;
-	isAccessible?: boolean;
+	/** Defaults to 'unknown'. */
+	accessibility?: AccessibilityStatus;
+	/** Defaults to 'mapped'. */
+	source?: EntranceSource;
 }
 
 export interface RawCampusData {

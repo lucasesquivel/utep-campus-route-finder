@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'bun:test';
+import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import type { CampusDataSource } from './CampusDataSource';
 import { CampusRepository } from './CampusRepository';
@@ -21,7 +21,6 @@ function makeRaw(): RawCampusData {
 				toId: 'c',
 				distanceM: 150,
 				hasStairs: true,
-				isAccessible: false,
 				bidirectional: false
 			}
 		],
@@ -31,7 +30,14 @@ function makeRaw(): RawCampusData {
 		],
 		entrances: [
 			{ id: 'en1', buildingId: 'bld1', nodeId: 'a' },
-			{ id: 'en2', buildingId: 'bld1', nodeId: 'b', isAccessible: false }
+			{ id: 'en2', buildingId: 'bld1', nodeId: 'b', accessibility: 'inaccessible' },
+			{
+				id: 'en3',
+				buildingId: 'bld2',
+				nodeId: 'c',
+				accessibility: 'accessible',
+				source: 'verified'
+			}
 		]
 	};
 }
@@ -78,7 +84,7 @@ describe('RoutingGraphAdapter traversals (CG-3)', () => {
 			hasStairs: false,
 			stepCount: null,
 			hasRamp: true,
-			accessibility: { status: 'accessible' }
+			accessibility: { status: 'unknown' }
 		});
 	});
 
@@ -142,6 +148,14 @@ describe('CampusRepository routing accessors', () => {
 		expect(() => repo.getRoutingEntrances('bld1')).toThrow(DataLoadError);
 	});
 
+	it('passes verified entrances through with their source', async () => {
+		const repo = await loadRepo(makeRaw());
+		expect(repo.getRoutingEntrances('bld2')[0]).toMatchObject({
+			accessibility: { status: 'accessible' },
+			source: 'verified'
+		});
+	});
+
 	it('returns entrances with accessibility status and unknown steps', async () => {
 		const repo = await loadRepo(makeRaw());
 		expect(repo.getRoutingEntrances('bld1')).toEqual([
@@ -150,14 +164,16 @@ describe('CampusRepository routing accessors', () => {
 				buildingId: 'bld1',
 				nodeId: 'a',
 				hasSteps: null,
-				accessibility: { status: 'accessible' }
+				accessibility: { status: 'unknown' },
+				source: 'mapped'
 			},
 			{
 				id: 'en2',
 				buildingId: 'bld1',
 				nodeId: 'b',
 				hasSteps: null,
-				accessibility: { status: 'inaccessible' }
+				accessibility: { status: 'inaccessible' },
+				source: 'mapped'
 			}
 		]);
 	});

@@ -1,6 +1,7 @@
 import type { CampusGraph } from './CampusGraph';
 import type {
 	AccessibilityInfo,
+	AccessibilityStatus,
 	Entrance,
 	GraphNode,
 	PathEdge,
@@ -10,8 +11,11 @@ import type {
 	RoutingNode
 } from './types';
 
-const ACCESSIBLE: AccessibilityInfo = Object.freeze({ status: 'accessible' });
-const INACCESSIBLE: AccessibilityInfo = Object.freeze({ status: 'inaccessible' });
+const ACCESSIBILITY_INFO: Readonly<Record<AccessibilityStatus, AccessibilityInfo>> = Object.freeze({
+	accessible: Object.freeze({ status: 'accessible' }),
+	inaccessible: Object.freeze({ status: 'inaccessible' }),
+	unknown: Object.freeze({ status: 'unknown' })
+});
 
 /**
  * Presents a CampusGraph in the shape the Routing subsystem reads: node lookup (CG-2) and
@@ -21,9 +25,8 @@ const INACCESSIBLE: AccessibilityInfo = Object.freeze({ status: 'inaccessible' }
  * RoutingEdge, so a traversal always runs in its edge's stored direction. Geometry is the
  * straight segment between the two nodes, which matches OSM-derived edges (one per segment).
  *
- * Accessibility is never reported as 'unknown': the internal model stores isAccessible as a
- * boolean, and untagged OSM paths are already resolved to accessible by the transformer.
- * Step counts and entrance steps are not in the model, so they are reported as null.
+ * Accessibility keeps all three states, so Routing can tell verified paths from 'unknown'
+ * ones. Step counts and entrance steps are not in the model, so they are reported as null.
  *
  * The adapter holds no state of its own; it reads the wrapped graph on every call.
  */
@@ -41,7 +44,7 @@ export class RoutingGraphAdapter {
 	}
 
 	/** CG-3: traversals leaving nodeId. Throws NotFoundError for an unknown node. */
-	getNeighbors(nodeId: string): PathTraversal[] {
+	getNeighbors(nodeId: string): readonly PathTraversal[] {
 		return this.graph.getNeighbors(nodeId).map((edge) => this.toTraversal(edge));
 	}
 
@@ -52,7 +55,8 @@ export class RoutingGraphAdapter {
 			buildingId: entrance.buildingId,
 			nodeId: entrance.nodeId,
 			hasSteps: null,
-			accessibility: RoutingGraphAdapter.toAccessibility(entrance.isAccessible)
+			accessibility: ACCESSIBILITY_INFO[entrance.accessibility],
+			source: entrance.source
 		};
 	}
 
@@ -87,15 +91,11 @@ export class RoutingGraphAdapter {
 			hasStairs: edge.hasStairs,
 			stepCount: null,
 			hasRamp: edge.hasRamp,
-			accessibility: RoutingGraphAdapter.toAccessibility(edge.isAccessible)
+			accessibility: ACCESSIBILITY_INFO[edge.accessibility]
 		};
 	}
 
 	private static toRoutingNode(node: GraphNode): RoutingNode {
 		return { id: node.id, location: [node.lng, node.lat] };
-	}
-
-	private static toAccessibility(isAccessible: boolean): AccessibilityInfo {
-		return isAccessible ? ACCESSIBLE : INACCESSIBLE;
 	}
 }

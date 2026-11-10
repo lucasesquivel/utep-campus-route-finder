@@ -1,5 +1,5 @@
 {
- "_note": "DUMMY test data for the Increment 1 vertical slice (not real UTEP geometry). Includes a stairs shortcut, a steep non-stair path, an accessible ramp detour, an inaccessible side entrance, and a disconnected building (b_annex) for no-route cases.",
+ "_note": "DUMMY test data for the Increment 1 vertical slice (not real UTEP geometry). Includes a stairs shortcut, a steep non-stair path, an accessible ramp detour, an inaccessible side entrance, and a disconnected building (b_annex) for no-route cases. Accessibility uses 'accessible' | 'inaccessible' | 'unknown'; the Union-Gym walk is left 'unknown' to model an untagged OSM footway.",
  "nodes": [
   {
    "id": "n_union",
@@ -89,7 +89,7 @@
    "slopePct": 1.1,
    "hasStairs": false,
    "hasRamp": false,
-   "isAccessible": true
+   "accessibility": "accessible"
   },
   {
    "id": "e_plaza_walk",
@@ -99,7 +99,7 @@
    "slopePct": 0.8,
    "hasStairs": false,
    "hasRamp": false,
-   "isAccessible": true
+   "accessibility": "accessible"
   },
   {
    "id": "e_walk_base",
@@ -109,7 +109,7 @@
    "slopePct": 1.4,
    "hasStairs": false,
    "hasRamp": false,
-   "isAccessible": true
+   "accessibility": "accessible"
   },
   {
    "id": "e_stairs",
@@ -119,7 +119,7 @@
    "slopePct": 7.9,
    "hasStairs": true,
    "hasRamp": false,
-   "isAccessible": false
+   "accessibility": "inaccessible"
   },
   {
    "id": "e_hill",
@@ -129,7 +129,7 @@
    "slopePct": 7.6,
    "hasStairs": false,
    "hasRamp": false,
-   "isAccessible": false
+   "accessibility": "inaccessible"
   },
   {
    "id": "e_top_eng",
@@ -139,7 +139,7 @@
    "slopePct": 4.5,
    "hasStairs": false,
    "hasRamp": false,
-   "isAccessible": true
+   "accessibility": "accessible"
   },
   {
    "id": "e_plaza_ramp",
@@ -149,7 +149,7 @@
    "slopePct": 2.0,
    "hasStairs": false,
    "hasRamp": false,
-   "isAccessible": true
+   "accessibility": "accessible"
   },
   {
    "id": "e_ramp_ab",
@@ -159,7 +159,7 @@
    "slopePct": 2.5,
    "hasStairs": false,
    "hasRamp": true,
-   "isAccessible": true
+   "accessibility": "accessible"
   },
   {
    "id": "e_ramp_eng",
@@ -169,7 +169,7 @@
    "slopePct": 3.3,
    "hasStairs": false,
    "hasRamp": false,
-   "isAccessible": true
+   "accessibility": "accessible"
   },
   {
    "id": "e_ramp_lib",
@@ -179,7 +179,7 @@
    "slopePct": 0.8,
    "hasStairs": false,
    "hasRamp": false,
-   "isAccessible": true
+   "accessibility": "accessible"
   },
   {
    "id": "e_plaza_uli",
@@ -189,7 +189,7 @@
    "slopePct": 0.0,
    "hasStairs": false,
    "hasRamp": false,
-   "isAccessible": true
+   "accessibility": "accessible"
   },
   {
    "id": "e_eng_sci",
@@ -199,7 +199,7 @@
    "slopePct": 0.0,
    "hasStairs": false,
    "hasRamp": false,
-   "isAccessible": true
+   "accessibility": "accessible"
   },
   {
    "id": "e_union_gym",
@@ -209,7 +209,7 @@
    "slopePct": -1.4,
    "hasStairs": false,
    "hasRamp": false,
-   "isAccessible": true
+   "accessibility": "unknown"
   }
  ],
  "buildings": [
@@ -428,43 +428,50 @@
   {
    "id": "en_union_main",
    "buildingId": "b_union",
-   "nodeId": "n_union"
+   "nodeId": "n_union",
+   "accessibility": "accessible"
   },
   {
    "id": "en_library_main",
    "buildingId": "b_library",
-   "nodeId": "n_library"
+   "nodeId": "n_library",
+   "accessibility": "accessible"
   },
   {
    "id": "en_eng_main",
    "buildingId": "b_eng",
-   "nodeId": "n_eng_door"
+   "nodeId": "n_eng_door",
+   "accessibility": "accessible"
   },
   {
    "id": "en_eng_side",
    "buildingId": "b_eng",
    "nodeId": "n_stairs_top",
-   "isAccessible": false
+   "accessibility": "inaccessible"
   },
   {
    "id": "en_sci_main",
    "buildingId": "b_sci",
-   "nodeId": "n_sci"
+   "nodeId": "n_sci",
+   "accessibility": "accessible"
   },
   {
    "id": "en_uli_main",
    "buildingId": "b_uli",
-   "nodeId": "n_uli"
+   "nodeId": "n_uli",
+   "accessibility": "accessible"
   },
   {
    "id": "en_gym_main",
    "buildingId": "b_gym",
-   "nodeId": "n_gym"
+   "nodeId": "n_gym",
+   "accessibility": "accessible"
   },
   {
    "id": "en_annex_main",
    "buildingId": "b_annex",
-   "nodeId": "n_island"
+   "nodeId": "n_island",
+   "accessibility": "accessible"
   }
  ]
 }

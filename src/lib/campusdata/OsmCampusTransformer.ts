@@ -1,6 +1,14 @@
 import { haversineM, pointInRing, polygonCentroid } from './geo';
 import { MalformedDataError } from './errors';
-import type { LngLat, RawBuilding, RawCampusData, RawEdge, RawEntrance, RawNode } from './types';
+import type {
+	AccessibilityStatus,
+	LngLat,
+	RawBuilding,
+	RawCampusData,
+	RawEdge,
+	RawEntrance,
+	RawNode
+} from './types';
 
 /* ---------- Minimal Overpass JSON shapes (output of `out body; >; out skel qt;`) ---------- */
 
@@ -20,10 +28,14 @@ export interface OsmData {
 export interface OsmCampusTransformOptions {
 	/** Max distance (m) to snap an entrance to the nearest path node. Default 30. */
 	snapDistanceM?: number;
-	/** If a building has no usable entrance, link its nearest path node within this distance (m). 0 disables. Default 60. */
+	/**
+	 * If a building has no mapped entrance, add an inferred entrance at the path node nearest
+	 * its centroid, within this distance (m). Inferred entrances are unverified ('unknown').
+	 * Opt-in: default 0 (disabled), so buildings without a known entrance keep none.
+	 */
 	fallbackEntranceDistanceM?: number;
-	/** Treat paths/entrances with no wheelchair tag as accessible (stairs never are). Default true. */
-	assumeAccessibleWhenUntagged?: boolean;
+	/** OSM `highway` values treated as walkable paths. Default DEFAULT_WALKABLE_HIGHWAYS. */
+	walkableHighways?: readonly string[];
 	/** Keep buildings that have no name. Default false (users cannot select them). */
 	includeUnnamedBuildings?: boolean;
 	/** Optional elevation source (e.g., DEM) used when a node has no `ele` tag. */
@@ -36,25 +48,36 @@ export interface OsmTransformResult {
 	warnings: string[];
 }
 
-const PATH_HIGHWAYS = new Set(['footway', 'path', 'steps', 'pedestrian', 'corridor']);
+export const DEFAULT_WALKABLE_HIGHWAYS: readonly string[] = Object.freeze([
+	'footway',
+	'path',
+	'steps',
+	'pedestrian',
+	'corridor'
+]);
 const SKIPPED_ENTRANCES = new Set(['no', 'emergency', 'service']);
 
 /**
  * Converts OpenStreetMap-derived data into the internal RawCampusData shape.
  * It records geographic facts only (distance, slope, stairs, ramps, accessibility tags);
  * routing policy (penalties, exclusions) stays in the Routing subsystem.
+ *
+ * Connectivity follows OSM exactly: two paths connect only where their ways share a node.
+ * Paths are never joined just because they are close; missing connections belong in the
+ * manually verified corrections file (see CampusCorrections). Untagged paths and entrances
+ * are 'unknown', never assumed accessible.
  */
 export class OsmCampusTransformer {
 	private readonly snapDistanceM: number;
 	private readonly fallbackEntranceDistanceM: number;
-	private readonly assumeAccessible: boolean;
+	private readonly walkableHighways: ReadonlySet<string>;
 	private readonly includeUnnamedBuildings: boolean;
 	private readonly elevationLookup?: (lat: number, lng: number) => number | undefined;
 
 	constructor(options: OsmCampusTransformOptions = {}) {
 		this.snapDistanceM = options.snapDistanceM ?? 30;
-		this.fallbackEntranceDistanceM = options.fallbackEntranceDistanceM ?? 60;
-		this.assumeAccessible = options.assumeAccessibleWhenUntagged ?? true;
+		this.fallbackEntranceDistanceM = options.fallbackEntranceDistanceM ?? 0;
+		this.walkableHighways = new Set(options.walkableHighways ?? DEFAULT_WALKABLE_HIGHWAYS);
 		this.includeUnnamedBuildings = options.includeUnnamedBuildings ?? false;
 		this.elevationLookup = options.elevationLookup;
 	}
@@ -101,7 +124,7 @@ export class OsmCampusTransformer {
 	/* ---------- paths ---------- */
 
 	private isWalkable(tags: Record<string, string>): boolean {
-		if (!tags.highway || !PATH_HIGHWAYS.has(tags.highway)) return false;
+		if (!tags.highway || !this.walkableHighways.has(tags.highway)) return false;
 		if (tags.foot === 'no') return false;
 		if ((tags.access === 'no' || tags.access === 'private') && tags.foot !== 'yes') return false;
 		return true;
@@ -129,7 +152,7 @@ export class OsmCampusTransformer {
 
 			const hasStairs = tags.highway === 'steps';
 			const hasRamp = tags.ramp === 'yes' || tags['ramp:wheelchair'] === 'yes';
-			const isAccessible = this.wayAccessible(tags, hasStairs);
+			const accessibility = hasStairs ? 'inaccessible' : wheelchairStatus(tags.wheelchair);
 			const taggedSlope = parseIncline(tags.incline);
 
 			for (let i = 0; i < refs.length; i++) {
@@ -147,7 +170,12 @@ export class OsmCampusTransformer {
 				const distanceM = haversineM(a.lat, a.lng, b.lat, b.lng);
 
 				let slopePct = taggedSlope;
-				if (slopePct === undefined && a.elevationM !== undefined && b.elevationM !== undefined && distanceM > 0) {
+				if (
+					slopePct === undefined &&
+					a.elevationM !== undefined &&
+					b.elevationM !== undefined &&
+					distanceM > 0
+				) {
 					slopePct = Math.round(((b.elevationM - a.elevationM) / distanceM) * 10000) / 100;
 				}
 
@@ -159,28 +187,20 @@ export class OsmCampusTransformer {
 					slopePct,
 					hasStairs,
 					hasRamp,
-					isAccessible
+					accessibility
 				});
 			}
 		}
 		return { nodes: [...nodes.values()], edges };
 	}
 
-	/** Stairs are never accessible; otherwise `wheelchair=no|limited` is not, and `yes` is. */
-	private wayAccessible(tags: Record<string, string>, hasStairs: boolean): boolean {
-		if (hasStairs) return false;
-		return this.wheelchairFlag(tags.wheelchair);
-	}
-
-	private wheelchairFlag(value: string | undefined): boolean {
-		if (value === 'yes') return true;
-		if (value === 'no' || value === 'limited') return false;
-		return this.assumeAccessible;
-	}
-
 	/* ---------- buildings ---------- */
 
-	private buildBuildings(ways: OsmElement[], osmNodes: Map<number, OsmElement>, warnings: string[]) {
+	private buildBuildings(
+		ways: OsmElement[],
+		osmNodes: Map<number, OsmElement>,
+		warnings: string[]
+	) {
 		const result: { building: RawBuilding; nodeIds: Set<number> }[] = [];
 		for (const way of ways) {
 			const tags = way.tags ?? {};
@@ -226,7 +246,8 @@ export class OsmCampusTransformer {
 
 		for (const el of elements) {
 			const kind = el.tags?.entrance;
-			if (el.type !== 'node' || !kind || SKIPPED_ENTRANCES.has(kind) || !osmNodes.has(el.id)) continue;
+			if (el.type !== 'node' || !kind || SKIPPED_ENTRANCES.has(kind) || !osmNodes.has(el.id))
+				continue;
 
 			const owner =
 				buildings.find((b) => b.nodeIds.has(el.id)) ??
@@ -238,41 +259,62 @@ export class OsmCampusTransformer {
 
 			const target = this.snapToPath(el.lat!, el.lon!, graphNodes, this.snapDistanceM);
 			if (!target) {
-				warnings.push(`Entrance node ${el.id} is farther than ${this.snapDistanceM} m from any path; skipped`);
+				warnings.push(
+					`Entrance node ${el.id} is farther than ${this.snapDistanceM} m from any path; skipped`
+				);
 				continue;
 			}
 
+			if (target.id !== `n${el.id}`) {
+				const offsetM = haversineM(el.lat!, el.lon!, target.lat, target.lng);
+				warnings.push(
+					`Entrance node ${el.id} is not on a mapped path; connected to nearest path node ${target.id} (${offsetM.toFixed(1)} m away)`
+				);
+			}
 			entrances.push({
 				id: `en${el.id}`,
 				buildingId: owner.building.id,
 				nodeId: target.id,
-				isAccessible: this.wheelchairFlag(el.tags?.wheelchair)
+				accessibility: wheelchairStatus(el.tags?.wheelchair),
+				source: 'mapped'
 			});
 			buildingsWithEntrance.add(owner.building.id);
 		}
 
-		if (this.fallbackEntranceDistanceM > 0) {
-			for (const { building } of buildings) {
-				if (buildingsWithEntrance.has(building.id)) continue;
-				const [lng, lat] = building.centroid!;
-				const target = this.snapToPath(lat, lng, graphNodes, this.fallbackEntranceDistanceM);
-				if (target) {
-					entrances.push({
-						id: `en_${building.id}_auto`,
-						buildingId: building.id,
-						nodeId: target.id,
-						isAccessible: this.assumeAccessible
-					});
-					warnings.push(`Building ${building.id} (${building.name}) has no entrance; linked nearest path node ${target.id}`);
-				} else {
-					warnings.push(`Building ${building.id} (${building.name}) has no entrance and no path nearby`);
-				}
+		for (const { building } of buildings) {
+			if (buildingsWithEntrance.has(building.id)) continue;
+			if (this.fallbackEntranceDistanceM <= 0) {
+				warnings.push(`Building ${building.id} (${building.name}) has no known entrance`);
+				continue;
+			}
+			const [lng, lat] = building.centroid!;
+			const target = this.snapToPath(lat, lng, graphNodes, this.fallbackEntranceDistanceM);
+			if (target) {
+				entrances.push({
+					id: `en_${building.id}_inferred`,
+					buildingId: building.id,
+					nodeId: target.id,
+					accessibility: 'unknown',
+					source: 'inferred'
+				});
+				warnings.push(
+					`Building ${building.id} (${building.name}) has no mapped entrance; inferred one at ${target.id} (unverified)`
+				);
+			} else {
+				warnings.push(
+					`Building ${building.id} (${building.name}) has no entrance and no path nearby`
+				);
 			}
 		}
 		return entrances;
 	}
 
-	private snapToPath(lat: number, lng: number, graphNodes: Map<string, RawNode>, maxM: number): RawNode | undefined {
+	private snapToPath(
+		lat: number,
+		lng: number,
+		graphNodes: Map<string, RawNode>,
+		maxM: number
+	): RawNode | undefined {
 		let best: RawNode | undefined;
 		let bestDist = Infinity;
 		for (const node of graphNodes.values()) {
@@ -284,6 +326,16 @@ export class OsmCampusTransformer {
 		}
 		return best && bestDist <= maxM ? best : undefined;
 	}
+}
+
+/**
+ * Maps the OSM `wheelchair` tag to an accessibility status. 'limited' means only partly
+ * usable, so it is recorded as 'inaccessible'; a missing or unrecognized value is 'unknown'.
+ */
+function wheelchairStatus(value: string | undefined): AccessibilityStatus {
+	if (value === 'yes' || value === 'designated') return 'accessible';
+	if (value === 'no' || value === 'limited') return 'inaccessible';
+	return 'unknown';
 }
 
 /** Parses OSM `incline` values like "5%", "-3.5%", or "4°" into percent grade along the way direction. */

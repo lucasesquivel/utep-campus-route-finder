@@ -6,12 +6,19 @@
  * Try it: GET /campus-data-example
  */
 import { json } from '@sveltejs/kit';
-import { CampusRepository, DataLoadError, MalformedDataError, StaticFileCampusDataSource } from '#lib/campusdata/index.js';
+import {
+	CampusRepository,
+	DataLoadError,
+	MalformedDataError,
+	StaticFileCampusDataSource
+} from '#lib/campusdata/index.js';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ fetch }) => {
 	// Pass SvelteKit's event.fetch so the relative URL resolves to static/data/campus.json on the server.
-	const repository = new CampusRepository(new StaticFileCampusDataSource('/data/campus.json', fetch));
+	const repository = new CampusRepository(
+		new StaticFileCampusDataSource('/data/campus.json', fetch)
+	);
 
 	try {
 		await repository.loadCampusData();
@@ -31,7 +38,12 @@ export const GET: RequestHandler = async ({ fetch }) => {
 		buildings: repository.getBuildings().map((b) => ({
 			id: b.id,
 			name: b.name,
-			entrances: repository.getEntrances(b.id).map((e) => ({ id: e.id, nodeId: e.nodeId, isAccessible: e.isAccessible }))
+			entrances: repository.getEntrances(b.id).map((e) => ({
+				id: e.id,
+				nodeId: e.nodeId,
+				accessibility: e.accessibility,
+				source: e.source
+			}))
 		}))
 	});
 };

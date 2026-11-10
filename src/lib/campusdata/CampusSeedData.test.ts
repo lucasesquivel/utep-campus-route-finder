@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'bun:test';
+import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { CampusRepository } from './CampusRepository';
 import type { CampusDataSource } from './CampusDataSource';
@@ -32,8 +32,8 @@ describe('seed campus.json (dummy data)', () => {
 	it('has a stairs edge and an inaccessible entrance for ADA-mode demos', async () => {
 		const repo = await loadSeed();
 		const stairs = repo.getNeighboringPaths('n_stairs_base').find((e) => e.id === 'e_stairs')!;
-		expect(stairs).toMatchObject({ hasStairs: true, isAccessible: false });
-		expect(repo.getEntrances('b_eng').some((e) => !e.isAccessible)).toBe(true);
+		expect(stairs).toMatchObject({ hasStairs: true, accessibility: 'inaccessible' });
+		expect(repo.getEntrances('b_eng').some((e) => e.accessibility === 'inaccessible')).toBe(true);
 	});
 
 	it('has a ramp edge with a positive slope going up and negative coming back', async () => {
@@ -56,5 +56,11 @@ describe('seed campus.json (dummy data)', () => {
 		const geo = repo.getBuildingsGeoJSON();
 		expect(geo.features).toHaveLength(7);
 		expect(geo.features[0].geometry.type).toBe('Polygon');
+	});
+
+	it('includes an untagged (unknown) path so ADA can report unverified distance', async () => {
+		const repo = await loadSeed();
+		const walk = repo.getNeighboringPaths('n_union').find((e) => e.id === 'e_union_gym')!;
+		expect(walk.accessibility).toBe('unknown');
 	});
 });
