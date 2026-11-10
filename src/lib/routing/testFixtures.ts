@@ -47,13 +47,25 @@ export interface EdgeSpec {
 	distanceM?: number;
 }
 
+/**
+ * In-memory CampusGraph for tests.
+ *
+ * Edges default to 'accessible' unless the constructor says otherwise. Real OpenStreetMap
+ * data is the opposite: most footways carry no wheelchair tag, so Campus Data records them
+ * as 'unknown'. Pass 'unknown' to model that, or set accessibility per edge.
+ */
 export class FakeCampusGraph implements CampusGraphView {
+	private readonly defaultAccessibility: AccessibilityStatus;
 	private readonly nodeMap = new Map<NodeId, GraphNodeView>();
 	private readonly adjacency = new Map<NodeId, PathTraversalView[]>();
 	private readonly local = new Map<NodeId, readonly [number, number]>();
 	readonly edges: PathEdgeView[] = [];
 	/** Counts CG-3 calls so tests can check the search does not over-expand. */
 	neighborCalls = 0;
+
+	constructor(defaultAccessibility: AccessibilityStatus = 'accessible') {
+		this.defaultAccessibility = defaultAccessibility;
+	}
 
 	addNode(id: NodeId, xM: number, yM: number): this {
 		this.nodeMap.set(id, Object.freeze({ id, location: at(xM, yM) }));
@@ -93,7 +105,7 @@ export class FakeCampusGraph implements CampusGraphView {
 			geometry: Object.freeze(geometry),
 			hasStairs: spec.hasStairs ?? false,
 			stepCount: spec.stepCount ?? null,
-			accessibility: Object.freeze({ status: spec.accessibility ?? 'accessible' })
+			accessibility: Object.freeze({ status: spec.accessibility ?? this.defaultAccessibility })
 		});
 		this.edges.push(edge);
 

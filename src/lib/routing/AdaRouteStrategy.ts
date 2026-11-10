@@ -11,6 +11,18 @@ import { getKnownGrade, type RoutingStrategy } from './RoutingStrategy';
  * Unknown paths and entrances stay usable, but unknown paths cost ADA_UNVERIFIED_FACTOR times
  * more, so a verified path wins when one exists. Route.unverifiedAccessibilityDistanceM
  * reports how much of the route is unverified so the UI can warn the user.
+ *
+ * KNOWN LIMITATION: an ADA route is NOT guaranteed to be accessible. It is guaranteed only
+ * to avoid what Campus Data positively records as blocked (stairs, inaccessible paths and
+ * entrances, steep grades). Wherever the data is silent, the route may pass through
+ * something that is in fact inaccessible. The UI must show a warning whenever
+ * route.unverifiedAccessibilityDistanceM > 0. An unknown entrance is also allowed and is
+ * not counted in that distance, so the UI should check route.origin.entrance and
+ * route.destination.entrance (accessibility.status === 'unknown') as well.
+ *
+ * Decision (SDD 5.6 design-review item): keep the permissive policy above and do not add a
+ * strict option that blocks unknown paths. Revisit if the accessibility supplement leaves
+ * few unknowns.
  */
 export class AdaRouteStrategy implements RoutingStrategy {
 	/** 1:12 ADA ramp limit, in percent. */

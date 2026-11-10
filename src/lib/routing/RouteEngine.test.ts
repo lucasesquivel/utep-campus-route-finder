@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { RouteMode } from '../shared/types';
 import { AdaRouteStrategy } from './AdaRouteStrategy';
-import type { NodeId, PathTraversalView } from './campusDataView';
+import type { AccessibilityStatus, NodeId, PathTraversalView } from './campusDataView';
 import { EasyRouteStrategy } from './EasyRouteStrategy';
 import { RouteRequestError } from './errors';
 import { RouteEngine } from './RouteEngine';
@@ -351,6 +351,187 @@ describe('RT-1 ADA mode', () => {
 		expect(route.nodeIds).toEqual(['A', 'B']);
 		expect(route.unverifiedAccessibilityDistanceM).toBeCloseTo(100, 0);
 		expect(route.totalCost).toBeCloseTo(route.totalDistanceM * 1.5, 6);
+	});
+});
+
+/**
+ * OpenStreetMap rarely tags footways with wheelchair information, so real campus data is
+ * mostly 'unknown'. These tests use that shape instead of the 'accessible' fixture default.
+ */
+describe('RT-1 ADA mode with OSM-like data (mostly unknown accessibility)', () => {
+	const SIZE = 6;
+	const SPACING_M = 60;
+	const nodeAt = (row: number, col: number): NodeId => `n${row}-${col}`;
+
+	/** Same sequence on every run, so a failing "random" graph can be reproduced. */
+	function seededRandom(seed: number): () => number {
+		let state = seed;
+		return () => {
+			state = (state * 1664525 + 1013904223) % 4294967296;
+			return state / 4294967296;
+		};
+	}
+
+	/** SIZE x SIZE street grid; pickStatus decides each path's accessibility. */
+	function osmLikeGrid(pickStatus: () => AccessibilityStatus): FakeCampusGraph {
+		const graph = new FakeCampusGraph('unknown');
+		for (let row = 0; row < SIZE; row++) {
+			for (let col = 0; col < SIZE; col++) {
+				graph.addNode(nodeAt(row, col), col * SPACING_M, row * SPACING_M);
+			}
+		}
+		for (let row = 0; row < SIZE; row++) {
+			for (let col = 0; col < SIZE; col++) {
+				if (col + 1 < SIZE) {
+					graph.addEdge({
+						from: nodeAt(row, col),
+						to: nodeAt(row, col + 1),
+						accessibility: pickStatus()
+					});
+				}
+				if (row + 1 < SIZE) {
+					graph.addEdge({
+						from: nodeAt(row, col),
+						to: nodeAt(row + 1, col),
+						accessibility: pickStatus()
+					});
+				}
+			}
+		}
+		return graph;
+	}
+
+	const unknownDistanceM = (traversals: readonly PathTraversalView[]) =>
+		traversals
+			.filter((t) => t.edge.accessibility.status === 'unknown')
+			.reduce((sum, t) => sum + t.distanceM, 0);
+
+	it('still finds a route when every path is unknown, and flags all of it as unverified', () => {
+		const graph = osmLikeGrid(() => 'unknown');
+		const e = engine(graph);
+		const request = (mode: RouteMode) => req(mode, [nodeAt(0, 0)], [nodeAt(SIZE - 1, SIZE - 1)]);
+
+		const shortest = expectFound(e.calculateRoute(request('shortest'))).route;
+		const ada = expectFound(e.calculateRoute(request('ada'))).route;
+
+		expect(ada.totalDistanceM).toBeCloseTo(shortest.totalDistanceM, 6);
+		expect(ada.unverifiedAccessibilityDistanceM).toBeCloseTo(ada.totalDistanceM, 6);
+		expect(ada.totalCost).toBeCloseTo(
+			ada.totalDistanceM * AdaRouteStrategy.ADA_UNVERIFIED_FACTOR,
+			6
+		);
+	});
+
+	it('gives the UI what it needs to warn: unverified distance on the Route and in GeoJSON', () => {
+		const graph = osmLikeGrid(() => 'unknown');
+		const { route } = expectFound(
+			engine(graph).calculateRoute(req('ada', [nodeAt(0, 0)], [nodeAt(0, SIZE - 1)]))
+		);
+
+		expect(route.unverifiedAccessibilityDistanceM).toBeGreaterThan(0);
+		expect(route.toGeoJson().properties.unverifiedAccessibilityDistanceM).toBe(
+			route.unverifiedAccessibilityDistanceM
+		);
+	});
+
+	it('reports exactly the unknown part of a route over a mostly-unknown campus', () => {
+		// About 85% unknown, 15% verified accessible, from a fixed seed.
+		const random = seededRandom(42);
+		const graph = osmLikeGrid(() => (random() < 0.85 ? 'unknown' : 'accessible'));
+		const e = engine(graph);
+		const corners = [
+			nodeAt(0, 0),
+			nodeAt(0, SIZE - 1),
+			nodeAt(SIZE - 1, 0),
+			nodeAt(SIZE - 1, SIZE - 1)
+		];
+
+		let routesWithWarning = 0;
+		for (const from of corners) {
+			for (const to of corners) {
+				if (from === to) continue;
+				const { route } = expectFound(e.calculateRoute(req('ada', [from], [to])));
+				expect(route.unverifiedAccessibilityDistanceM).toBeCloseTo(
+					unknownDistanceM(route.traversals),
+					6
+				);
+				expect(route.unverifiedAccessibilityDistanceM).toBeLessThanOrEqual(
+					route.totalDistanceM + 1e-9
+				);
+				if (route.unverifiedAccessibilityDistanceM > 0) routesWithWarning += 1;
+			}
+		}
+		// Guards against the test passing only because the graph happened to be fully verified.
+		expect(routesWithWarning).toBeGreaterThan(0);
+	});
+
+	it('never routes over inaccessible paths or stairs, even when the rest is unknown', () => {
+		// ~80% unknown, ~10% verified, ~10% marked inaccessible.
+		const random = seededRandom(7);
+		const graph = osmLikeGrid(() => {
+			const roll = random();
+			return roll < 0.8 ? 'unknown' : roll < 0.9 ? 'accessible' : 'inaccessible';
+		});
+		const e = engine(graph);
+
+		let found = 0;
+		for (const to of [nodeAt(0, SIZE - 1), nodeAt(SIZE - 1, 0), nodeAt(SIZE - 1, SIZE - 1)]) {
+			const result = e.calculateRoute(req('ada', [nodeAt(0, 0)], [to]));
+			if (result.status === 'no-route') {
+				expect(result.reason).toBe('UNREACHABLE');
+				continue;
+			}
+			found += 1;
+			for (const t of result.route.traversals) {
+				expect(t.edge.accessibility.status).not.toBe('inaccessible');
+				expect(t.edge.hasStairs).not.toBe(true);
+			}
+		}
+		expect(found).toBeGreaterThan(0);
+	});
+
+	it('avoids an untagged staircase (kind steps, hasStairs and accessibility unknown)', () => {
+		// OSM often tags only highway=steps, leaving the other facts null/unknown.
+		const graph = new FakeCampusGraph('unknown')
+			.addNode('A', 0, 0)
+			.addNode('B', 200, 0)
+			.addNode('D', 100, 120);
+		graph.addEdge({ id: 'steps', from: 'A', to: 'B', kind: 'steps', hasStairs: null });
+		graph.addEdge({ from: 'A', to: 'D' });
+		graph.addEdge({ from: 'D', to: 'B' });
+		const e = engine(graph);
+
+		const { route } = expectFound(e.calculateRoute(req('ada', ['A'], ['B'])));
+		expect(route.nodeIds).toEqual(['A', 'D', 'B']);
+		expect(route.stairSegmentCount).toBe(0);
+
+		const stepsOnly = new FakeCampusGraph('unknown').addNode('A', 0, 0).addNode('B', 200, 0);
+		stepsOnly.addEdge({ from: 'A', to: 'B', kind: 'steps', hasStairs: null });
+		expect(engine(stepsOnly).calculateRoute(req('ada', ['A'], ['B']))).toMatchObject({
+			status: 'no-route',
+			reason: 'UNREACHABLE'
+		});
+	});
+
+	it('keeps an unknown entrance usable and leaves it on the Route for the UI to check', () => {
+		const graph = osmLikeGrid(() => 'unknown');
+		const unknownEntrance = (id: string, nodeId: NodeId) =>
+			entrance(id, nodeId, { hasSteps: null, accessibility: 'unknown' });
+
+		const result = engine(graph).calculateRoute({
+			mode: 'ada',
+			origins: [{ nodeId: nodeAt(0, 0), entrance: unknownEntrance('o', nodeAt(0, 0)) }],
+			destinations: [
+				{
+					nodeId: nodeAt(SIZE - 1, SIZE - 1),
+					entrance: unknownEntrance('d', nodeAt(SIZE - 1, SIZE - 1))
+				}
+			]
+		});
+
+		const { route } = expectFound(result);
+		expect(route.origin.entrance?.accessibility.status).toBe('unknown');
+		expect(route.destination.entrance?.accessibility.status).toBe('unknown');
 	});
 });
 

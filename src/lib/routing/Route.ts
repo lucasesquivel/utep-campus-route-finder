@@ -43,7 +43,11 @@ export class Route {
 	readonly elevationComplete: boolean;
 	/** Number of traversals whose edge has stairs. */
 	readonly stairSegmentCount: number;
-	/** Distance over paths whose accessibility status is unknown. */
+	/**
+	 * Distance over paths whose accessibility status is unknown. The UI should warn the user
+	 * when this is above 0, especially in ADA mode, which allows unknown paths (see
+	 * AdaRouteStrategy). It does not cover unknown entrances; those are on origin/destination.
+	 */
 	readonly unverifiedAccessibilityDistanceM: number;
 	/** totalDistanceM / WALKING_SPEED_MPS. */
 	readonly estimatedWalkTimeS: number;
