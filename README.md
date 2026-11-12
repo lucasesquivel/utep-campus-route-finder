@@ -39,8 +39,9 @@ You can preview the production build with `bun run preview`.
 
 > To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
 
+ 
+ 
 ### Project File Structure
-
 ## Project Structure
 
 Source code is organized by the four subsystems defined in the SDD. Routing logic must stay out of Svelte components, and MapLibre is used only for visualization.
@@ -90,12 +91,12 @@ static/
 
 ### Subsystem Responsibilities
 
-| Folder        | Subsystem                | Owns                                                      |
-| ------------- | ------------------------ | --------------------------------------------------------- |
-| `ui/`         | UI / Map                 | User input, map rendering, displaying routes and errors   |
+| Folder | Subsystem | Owns |
+| --- | --- | --- |
+| `ui/` | UI / Map | User input, map rendering, displaying routes and errors |
 | `controller/` | Application / Controller | Validating requests, coordinating Routing and Campus Data |
-| `routing/`    | Routing                  | Route search, edge traversability and cost, route results |
-| `campusdata/` | Campus Data              | CampusGraph, buildings, entrances, path facts (no costs)  |
+| `routing/` | Routing | Route search, edge traversability and cost, route results |
+| `campusdata/` | Campus Data | CampusGraph, buildings, entrances, path facts (no costs) |
 
 ### Conventions
 
