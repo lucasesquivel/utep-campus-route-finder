@@ -1,10 +1,10 @@
-import { 
-  RouteSelection, 
-  RouteResponse, 
-  ValidationResult, 
-  ValidationCode, 
-  RouteFailure, 
-  NoRouteReason 
+import type {
+  RouteSelection,
+  RouteResponse,
+  ValidationResult,
+  ValidationCode,
+  RouteFailure,
+  NoRouteReason
 } from './types';
 
 // Import interfaces/classes using SvelteKit $lib aliases
@@ -13,7 +13,7 @@ import { RouteEngine } from '../routing/RouteEngine';
 import { ShortestRouteStrategy } from '../routing/ShortestRouteStrategy';
 import { EasyRouteStrategy } from '../routing/EasyRouteStrategy';
 import { AdaRouteStrategy } from '../routing/AdaRouteStrategy';
-import { RouteRequest, RouteResult } from '../routing/types';
+import type { RouteRequest, RouteResult } from '../routing/types';
 
 export class RouteController {
   private repository: CampusRepository;
