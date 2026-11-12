@@ -1,0 +1,30 @@
+$ bun run test:unit -- --run
+$ vitest --run
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.12 [39m[90m/Users/jasonortiz/Desktop/utep-campus-route-finder[39m
+
+ [32m✓[39m [30m[42m server [49m[39m src/lib/routing/MinPriorityQueue.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m [30m[42m server [49m[39m src/lib/campusdata/CampusData.test.ts [2m([22m[2m36 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m [30m[42m server [49m[39m src/lib/campusdata/CampusValidation.test.ts [2m([22m[2m23 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m [30m[42m server [49m[39m src/lib/campusdata/fetchJson.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m [30m[42m server [49m[39m src/routes/campus-data-example/server.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m [30m[42m server [49m[39m src/lib/campusdata/OsmCampusTransformer.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m [30m[42m server [49m[39m src/lib/controller/RouteController.test.ts [2m([22m[2m32 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m [30m[42m server [49m[39m src/lib/integration/RoutingCampusData.integration.test.ts [2m([22m[2m20 tests[22m[2m)[22m[32m 37[2mms[22m[39m
+ [32m✓[39m [30m[42m server [49m[39m src/lib/integration/ControllerAndApp.knownIssues.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m [30m[42m server [49m[39m src/lib/routing/RouteEngine.test.ts [2m([22m[2m51 tests[22m[2m)[22m[32m 90[2mms[22m[39m
+ [32m✓[39m [30m[42m server [49m[39m src/lib/routing/Route.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m [30m[42m server [49m[39m src/lib/campusdata/CampusSeedData.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m [30m[42m server [49m[39m src/lib/campusdata/RoutingGraphAdapter.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m [30m[42m server [49m[39m src/lib/ui/RouteServiceEdgeCases.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m [30m[42m server [49m[39m src/lib/routing/RoutingStrategy.test.ts [2m([22m[2m31 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m [30m[42m server [49m[39m src/lib/ui/RouteService.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m [30m[42m server [49m[39m src/lib/campusdata/geo.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m [30m[42m server [49m[39m src/lib/routing/RouteEngine.contract.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m [30m[42m server [49m[39m src/lib/shared/haversine.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m19 passed[39m[22m[90m (19)[39m
+[2m      Tests [22m [1m[32m320 passed[39m[22m[2m | [22m[36m10 expected fail[39m[90m (330)[39m
+[2m   Start at [22m 23:06:15
+[2m   Duration [22m 438ms[2m (transform 890ms, setup 0ms, import 1.41s, tests 316ms, environment 4ms)[22m
+
