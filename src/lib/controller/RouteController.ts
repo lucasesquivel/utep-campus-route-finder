@@ -7,14 +7,13 @@ import {
   NoRouteReason 
 } from './types';
 
-// Import interfaces/classes from Campus Data and Routing subsystems
-// (Adjust relative paths according to your repository structure)
-import { CampusRepository } from '$lib/campusdata/CampusRepository';
-import { RouteEngine } from '$lib/routing/RouteEngine';
-import { ShortestRouteStrategy } from '$lib/routing/ShortestRouteStrategy';
-import { EasyRouteStrategy } from '$lib/routing/EasyRouteStrategy';
-import { AdaRouteStrategy } from '$lib/routing/AdaRouteStrategy';
-import { RouteRequest, RouteResult } from '$lib/routing/types';
+// Import interfaces/classes using SvelteKit $lib aliases
+import { CampusRepository } from '../campusdata/CampusRepository';
+import { RouteEngine } from '../routing/RouteEngine';
+import { ShortestRouteStrategy } from '../routing/ShortestRouteStrategy';
+import { EasyRouteStrategy } from '../routing/EasyRouteStrategy';
+import { AdaRouteStrategy } from '../routing/AdaRouteStrategy';
+import { RouteRequest, RouteResult } from '../routing/types';
 
 export class RouteController {
   private repository: CampusRepository;
@@ -31,25 +30,23 @@ export class RouteController {
    */
   public async processRouteRequest(selection: RouteSelection): Promise<RouteResponse> {
     try {
-      // 1. Ensure campus data is loaded
-      if (this.repository.state !== 'ready') {
-        try {
-          await this.repository.loadCampusData();
-        } catch (err) {
-          return this.handleRouteFailure({ name: 'CampusDataLoadError', message: 'Failed to load campus data' });
-        }
+      // 1. Ensure campus data is loaded via repository method
+      try {
+        await this.repository.loadCampusData();
+      } catch (err) {
+        return this.handleRouteFailure({ name: 'CampusDataLoadError', message: 'Failed to load campus data' });
       }
 
-      // 2. Initialize RouteEngine once data is ready
+      // 2. Initialize RouteEngine once data is ready using merged routing graph
       if (!this.routeEngine) {
-        const graph = this.repository.getCampusGraph();
+        const routingGraph = this.repository.getRoutingGraph();
         // Register strategies available for Increment 1 & 2
         const strategies = [
           new ShortestRouteStrategy(),
           new EasyRouteStrategy(),
           new AdaRouteStrategy()
         ];
-        this.routeEngine = new RouteEngine(graph, strategies);
+        this.routeEngine = new RouteEngine(routingGraph, strategies);
       }
 
       // 3. Validate selections (Contract AC-2)
@@ -62,15 +59,15 @@ export class RouteController {
         });
       }
 
-      // 4. Build Routing Endpoints
-      const graph = this.repository.getCampusGraph();
+      // 4. Build Routing Endpoints using actual merged methods
+      const internalGraph = this.repository.getGraph();
       
       const buildEndpoints = (locationSelection: typeof selection.origin) => {
         if (locationSelection.kind === 'building') {
-          const entrances = this.repository.getBuildingEntrances(locationSelection.buildingId);
+          const entrances = this.repository.getRoutingEntrances(locationSelection.buildingId);
           return entrances.map(e => ({ nodeId: e.nodeId, entrance: e }));
         } else {
-          const nearestNode = graph.findNearestNode(locationSelection.location, this.MAX_MAP_SNAP_DISTANCE_M);
+          const nearestNode = this.findNearestNode(internalGraph, locationSelection.location, this.MAX_MAP_SNAP_DISTANCE_M);
           return [{ nodeId: nearestNode!.id }];
         }
       };
@@ -104,13 +101,12 @@ export class RouteController {
       return { valid: false, code: 'MISSING_DESTINATION', message: 'Destination location is required.' };
     }
 
-    // Check supported modes via RouteEngine if initialized, or fallback array
     const supportedModes = this.routeEngine ? this.routeEngine.supportedModes() : ['shortest', 'easy', 'ada'];
     if (!supportedModes.includes(selection.mode)) {
       return { valid: false, code: 'UNSUPPORTED_MODE', message: `Routing mode '${selection.mode}' is not supported.` };
     }
 
-    const graph = this.repository.getCampusGraph();
+    const internalGraph = this.repository.getGraph();
 
     // Validate origin
     if (selection.origin.kind === 'building') {
@@ -118,12 +114,12 @@ export class RouteController {
       if (!building) {
         return { valid: false, code: 'UNKNOWN_BUILDING', message: 'Starting building does not exist.' };
       }
-      const entrances = this.repository.getBuildingEntrances(selection.origin.buildingId);
+      const entrances = this.repository.getEntrances(selection.origin.buildingId);
       if (entrances.length === 0) {
         return { valid: false, code: 'NO_ENTRANCES', message: 'Starting building has no registered entrances.' };
       }
     } else {
-      const nearest = graph.findNearestNode(selection.origin.location, this.MAX_MAP_SNAP_DISTANCE_M);
+      const nearest = this.findNearestNode(internalGraph, selection.origin.location, this.MAX_MAP_SNAP_DISTANCE_M);
       if (!nearest) {
         return { valid: false, code: 'LOCATION_OFF_NETWORK', message: 'Starting location is too far from a pedestrian path.' };
       }
@@ -135,12 +131,12 @@ export class RouteController {
       if (!building) {
         return { valid: false, code: 'UNKNOWN_BUILDING', message: 'Destination building does not exist.' };
       }
-      const entrances = this.repository.getBuildingEntrances(selection.destination.buildingId);
+      const entrances = this.repository.getEntrances(selection.destination.buildingId);
       if (entrances.length === 0) {
         return { valid: false, code: 'NO_ENTRANCES', message: 'Destination building has no registered entrances.' };
       }
     } else {
-      const nearest = graph.findNearestNode(selection.destination.location, this.MAX_MAP_SNAP_DISTANCE_M);
+      const nearest = this.findNearestNode(internalGraph, selection.destination.location, this.MAX_MAP_SNAP_DISTANCE_M);
       if (!nearest) {
         return { valid: false, code: 'LOCATION_OFF_NETWORK', message: 'Destination location is too far from a pedestrian path.' };
       }
@@ -160,7 +156,31 @@ export class RouteController {
     const result: RouteResult = this.routeEngine.calculateRoute(request);
 
     if (result.status === 'found') {
-      return { status: 'success', route: result.route };
+      const route = result.route;
+      
+      // Explicitly serialize the Route class instance into a plain JSON object 
+      // preserving coordinates and metrics required by the UI subsystem.
+      const serializedRoute = {
+        mode: route.mode,
+        origin: route.origin,
+        destination: route.destination,
+        nodeIds: route.nodeIds,
+        traversals: route.traversals,
+        coordinates: route.coordinates, // Route class exposes readonly LngLat[] coordinates directly
+        totalDistanceM: route.totalDistanceM,
+        totalCost: route.totalCost,
+        elevationGainM: route.elevationGainM,
+        elevationLossM: route.elevationLossM,
+        elevationComplete: route.elevationComplete,
+        stairSegmentCount: route.stairSegmentCount,
+        unverifiedAccessibilityDistanceM: route.unverifiedAccessibilityDistanceM,
+        estimatedWalkTimeS: route.estimatedWalkTimeS
+      };
+
+      return { 
+        status: 'success', 
+        route: serializedRoute 
+      };
     } else {
       return this.handleRouteFailure(result);
     }
@@ -170,7 +190,6 @@ export class RouteController {
    * Contract AC-4: Handle Route Failure
    */
   public handleRouteFailure(cause: any): RouteResponse {
-    // Handle NoRouteResult from Routing
     if (cause && cause.status === 'no-route') {
       const reason: NoRouteReason = cause.reason;
       let message = 'No route could be calculated.';
@@ -191,7 +210,6 @@ export class RouteController {
       };
     }
 
-    // Handle Validation Failures
     if (cause && cause.name === 'ValidationFailure') {
       return {
         status: 'failure',
@@ -203,7 +221,6 @@ export class RouteController {
       };
     }
 
-    // Handle Data Loading Errors
     if (cause && (cause.name === 'CampusDataLoadError' || cause.message?.includes('load'))) {
       return {
         status: 'failure',
@@ -214,7 +231,6 @@ export class RouteController {
       };
     }
 
-    // Default Unexpected Error
     return {
       status: 'failure',
       failure: {
@@ -222,5 +238,42 @@ export class RouteController {
         message: 'Something went wrong. Please try again.'
       }
     };
+  }
+
+  private findNearestNode(graph: any, target: [number, number], maxDistM: number): any {
+    let closestNode: any = undefined;
+    let minDist = Infinity;
+    const nodesIterable = graph.nodes ? graph.nodes() : (graph.getNodes ? graph.getNodes() : []);
+    for (const node of nodesIterable) {
+      if (node) {
+        const nodeCoords: [number, number] = Array.isArray(node.location) 
+          ? node.location 
+          : [node.lng ?? node.longitude, node.lat ?? node.latitude];
+
+        if (Number.isFinite(nodeCoords[0]) && Number.isFinite(nodeCoords[1])) {
+          const dist = this.haversineDistance(target, nodeCoords);
+          if (dist < minDist && dist <= maxDistM) {
+            minDist = dist;
+            closestNode = node;
+          }
+        }
+      }
+    }
+    return closestNode;
+  }
+
+  private haversineDistance(coords1: [number, number], coords2: [number, number]): number {
+    const toRad = (x: number) => (x * Math.PI) / 180;
+    const [lon1, lat1] = coords1;
+    const [lon2, lat2] = coords2;
+    const R = 6371000;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
   }
 }
