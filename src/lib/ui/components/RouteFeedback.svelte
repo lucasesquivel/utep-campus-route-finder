@@ -12,7 +12,7 @@
     {#if route.distanceMeters !== undefined}<p>Distance: {(route.distanceMeters / 1000).toFixed(2)} km</p>{/if}
     {#if route.estimatedMinutes !== undefined}<p>Estimated walking time: {Math.round(route.estimatedMinutes)} minutes</p>{/if}
     {#if route.instructions?.length}
-      <ol>{#each route.instructions as instruction}<li>{instruction}</li>{/each}</ol>
+      <ol>{#each route.instructions as instruction (instruction)}<li>{instruction}</li>{/each}</ol>
     {/if}
   {:else}
     <p>Select two buildings and a mode to find a walking route.</p>

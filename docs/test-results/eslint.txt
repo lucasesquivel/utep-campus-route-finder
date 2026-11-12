@@ -1,0 +1,25 @@
+$ bunx eslint .
+
+/sessions/rcw-01k7blqa752gpacj2exw1wpt/work/proj/src/lib/controller/RouteController.ts
+    5:3   error  'ValidationCode' is defined but never used  @typescript-eslint/no-unused-vars
+    6:3   error  'RouteFailure' is defined but never used    @typescript-eslint/no-unused-vars
+   36:16  error  'err' is defined but never used             @typescript-eslint/no-unused-vars
+  192:36  error  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+  243:34  error  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+  243:84  error  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+  244:22  error  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+
+/sessions/rcw-01k7blqa752gpacj2exw1wpt/work/proj/src/lib/controller/types.ts
+  47:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/sessions/rcw-01k7blqa752gpacj2exw1wpt/work/proj/src/lib/ui/components/RouteFeedback.svelte
+  15:11  error  Each block should have a key  svelte/require-each-key
+
+/sessions/rcw-01k7blqa752gpacj2exw1wpt/work/proj/src/routes/+page.svelte
+  37:5   error  Expected an assignment or function call and instead saw an expression  @typescript-eslint/no-unused-expressions
+  37:22  error  Expected an assignment or function call and instead saw an expression  @typescript-eslint/no-unused-expressions
+  37:45  error  Expected an assignment or function call and instead saw an expression  @typescript-eslint/no-unused-expressions
+
+✖ 12 problems (12 errors, 0 warnings)
+
+[exit code: 1]

@@ -7,12 +7,9 @@ import RouteFeedback from '../lib/ui/components/RouteFeedback.svelte';
 import { HttpRouteService } from '../lib/ui/RouteService';
 import { NoRouteError, type Building, type RouteMode, type RouteResult } from '../lib/ui/types';
 
-  // No routes are invented; requests go exclusively to the Controller interface. Need campus data
-  const buildings: Building[] = [
-    { id: 'library', name: 'UTEP Library (sample)', coordinates: [-106.5047, 31.7720] },
-    { id: 'union', name: 'Union Building (sample)', coordinates: [-106.5060, 31.7709] },
-    { id: 'engineering', name: 'Engineering Building (sample)', coordinates: [-106.5026, 31.7704] }
-  ];
+  // Buildings come from the server (+page.server.ts), which reads the campus data.
+  let { data }: { data: { buildings: Building[] } } = $props();
+  const buildings = $derived(data.buildings);
   const routeService = new HttpRouteService('/api/route');
 
   let startBuildingId = $state('');
@@ -34,7 +31,7 @@ import { NoRouteError, type Building, type RouteMode, type RouteResult } from '.
 
   // Clear old route when the chosen inputs change.
   $effect(() => {
-    startBuildingId; destinationBuildingId; mode;
+    void [startBuildingId, destinationBuildingId, mode];
     resetRoute();
   });
 
@@ -77,7 +74,7 @@ import { NoRouteError, type Building, type RouteMode, type RouteResult } from '.
       {/if}
       <RouteControls disabled={!valid} {loading} onsubmit={submitRoute} />
       <RouteFeedback {route} {error} {loading} />
-      <p class="notice">Building markers and coordinates are sample placeholders, not verified campus data. Route calculation requires the team's Controller API.</p>
+      <p class="notice">Building locations and routes come from the campus data in this project. Routes are calculated by the Controller.</p>
     </section>
     <section class="map-panel" aria-label="Campus map"><CampusMap {buildings} {route} /></section>
   </main>

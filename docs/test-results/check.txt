@@ -1,0 +1,7 @@
+$ bun run check
+$ svelte-kit sync && svelte-check --tsconfig ./tsconfig.json
+Loading svelte-check in workspace: /sessions/rcw-01k7blqa752gpacj2exw1wpt/work/proj
+Getting Svelte diagnostics...
+
+svelte-check found 0 errors and 0 warnings
+[exit code: 0]

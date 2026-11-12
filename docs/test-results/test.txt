@@ -1,0 +1,32 @@
+$ bun run test
+$ bun run test:unit -- --run
+$ vitest --run
+
+ RUN  v4.1.12 /sessions/rcw-01k7blqa752gpacj2exw1wpt/work/proj
+
+ ✓  server  src/lib/campusdata/fetchJson.test.ts (10 tests) 17ms
+ ✓  server  src/lib/controller/RouteController.test.ts (32 tests) 14ms
+ ✓  server  src/lib/routing/RouteEngine.test.ts (51 tests) 70ms
+ ✓  server  src/lib/campusdata/OsmCampusTransformer.test.ts (17 tests) 17ms
+ ✓  server  src/lib/integration/ControllerAndApp.knownIssues.test.ts (11 tests) 18ms
+ ✓  server  src/lib/routing/MinPriorityQueue.test.ts (5 tests) 8ms
+ ✓  server  src/routes/campus-data-example/server.test.ts (4 tests) 15ms
+ ✓  server  src/lib/campusdata/CampusData.test.ts (36 tests) 9ms
+ ✓  server  src/lib/routing/RoutingStrategy.test.ts (31 tests) 9ms
+ ✓  server  src/lib/ui/RouteServiceEdgeCases.test.ts (19 tests) 6ms
+ ✓  server  src/lib/campusdata/CampusValidation.test.ts (23 tests) 8ms
+ ✓  server  src/lib/campusdata/RoutingGraphAdapter.test.ts (15 tests) 7ms
+ ✓  server  src/lib/routing/Route.test.ts (19 tests) 6ms
+ ✓  server  src/lib/ui/RouteService.test.ts (5 tests) 4ms
+ ✓  server  src/lib/campusdata/CampusSeedData.test.ts (7 tests) 4ms
+ ✓  server  src/lib/campusdata/geo.test.ts (17 tests) 5ms
+ ✓  server  src/lib/routing/RouteEngine.contract.test.ts (3 tests) 3ms
+ ✓  server  src/lib/shared/haversine.test.ts (5 tests) 2ms
+ ✓  server  src/lib/integration/RoutingCampusData.integration.test.ts (20 tests) 16ms
+
+ Test Files  19 passed (19)
+      Tests  320 passed | 10 expected fail (330)
+   Start at  06:03:44
+   Duration  689ms (transform 356ms, setup 0ms, import 571ms, tests 238ms, environment 3ms)
+
+[exit code: 0]
