@@ -41,7 +41,7 @@ function makeOsm(): OsmData {
 			way(2, [2, 4], { highway: 'steps', wheelchair: 'yes' }),
 			way(3, [5, 6], { highway: 'footway', wheelchair: 'yes', incline: '5%' }),
 			way(4, [6, 7], { highway: 'footway', wheelchair: 'limited' }),
-			way(5, [7, 8], { highway: 'service' }),
+			way(5, [7, 8], { highway: 'secondary' }),
 			way(100, [10, 11, 12, 13, 10], { building: 'yes', name: 'Test Hall' }),
 			way(101, [20, 21, 22, 23, 20], { building: 'yes', name: 'Test Annex' }),
 			way(102, [30, 31, 32, 33, 30], { building: 'yes' }),
@@ -105,8 +105,8 @@ describe('OsmCampusTransformer topology', () => {
 
 	it('uses only the configured walkable highway types', () => {
 		expect(transform().data.edges.some((e) => e.id === 'w5:0')).toBe(false);
-		const withService = transform({ walkableHighways: ['footway', 'steps', 'service'] });
-		expect(withService.data.edges.some((e) => e.id === 'w5:0')).toBe(true);
+		const withStreets = transform({ walkableHighways: ['footway', 'steps', 'secondary'] });
+		expect(withStreets.data.edges.some((e) => e.id === 'w5:0')).toBe(true);
 	});
 
 	it('warns about disconnected components that hold entrances', () => {
