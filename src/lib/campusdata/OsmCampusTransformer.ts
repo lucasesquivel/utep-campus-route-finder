@@ -48,12 +48,21 @@ export interface OsmTransformResult {
 	warnings: string[];
 }
 
+/**
+ * OSM `highway` values walked by default: dedicated pedestrian ways, plus campus service lanes
+ * and shared cycle/living streets. On the UTEP export, adding `service` joins the last mapped
+ * entrances to the main network. Public streets (residential, secondary...) stay excluded;
+ * where OSM maps their sidewalks, those are separate footways and are included.
+ */
 export const DEFAULT_WALKABLE_HIGHWAYS: readonly string[] = Object.freeze([
 	'footway',
 	'path',
 	'steps',
 	'pedestrian',
-	'corridor'
+	'corridor',
+	'cycleway',
+	'living_street',
+	'service'
 ]);
 const SKIPPED_ENTRANCES = new Set(['no', 'emergency', 'service']);
 
