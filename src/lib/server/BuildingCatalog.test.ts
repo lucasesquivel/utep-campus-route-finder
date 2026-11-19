@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 
 import { CampusRepository } from '../campusdata/CampusRepository';
@@ -61,4 +61,27 @@ describe('BuildingCatalog', () => {
 
     expect(repository.getBuildings().map((b) => b.id)).toEqual(originalIds);
   });
+  
+  it('returns each building ID only once when source records are duplicated', async () => {
+  const repository = createRepository();
+  await repository.loadCampusData();
+
+  const originalBuildings = repository.getBuildings();
+
+  // Simulate duplicate records being returned by the data layer.
+  vi.spyOn(repository, 'getBuildings').mockReturnValue([
+    ...originalBuildings,
+    originalBuildings[0]
+  ]);
+
+  const catalog = new BuildingCatalog(
+    repository,
+    new Set()
+  );
+
+  const buildings = catalog.listBuildings();
+  const ids = buildings.map((building) => building.id);
+
+  expect(ids.length).toBe(new Set(ids).size);
+});
 });

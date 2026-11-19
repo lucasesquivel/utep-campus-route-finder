@@ -35,11 +35,15 @@ export class BuildingCatalog {
   listBuildings(): Building[] {
     const graph = this.repository.getGraph();
     const result: Building[] = [];
+    const seenIds = new Set<string>();
 
     for (const building of this.repository.getBuildings()) {
-      if (this.excludedIds.has(building.id)) {
-        continue;
-      }
+        if (
+            this.excludedIds.has(building.id) ||
+            seenIds.has(building.id)
+        ) {
+            continue;
+        }
 
       let coordinates =
         building.centroid ??
@@ -63,6 +67,8 @@ export class BuildingCatalog {
       ) {
         continue;
       }
+
+      seenIds.add(building.id);
 
       result.push({
         id: building.id,
