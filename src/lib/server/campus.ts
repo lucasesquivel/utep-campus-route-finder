@@ -26,7 +26,7 @@ class DiskOsmCampusDataSource implements CampusDataSource {
     const transformer = new OsmCampusTransformer({
       // Create approximate, unverified entrances where OSM
       // does not have a mapped entrance.
-      fallbackEntranceDistanceM: 30
+      fallbackEntranceDistanceM: 45
     });
 
     const result = transformer.transform(osm);
@@ -52,8 +52,16 @@ export async function listBuildings(): Promise<Building[]> {
 
   const graph = repository.getGraph();
   const result: Building[] = [];
+  const excludedBuildingIds = new Set([
+  'b537018065', // McDonald's
+  'b405432420', // Hilton Garden Inn
+  'b562875867', // Mesa Hills Healthcare Residence
+  'b753039204', // Providence Memorial Hospital
+  'b794278838' // Traffic Control Booth 1
+  ]);
 
   for (const b of repository.getBuildings()) {
+	if (excludedBuildingIds.has(b.id)) continue;
     let coordinates =
       b.centroid ??
       (b.footprint
