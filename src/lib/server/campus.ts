@@ -1,4 +1,3 @@
-
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -8,9 +7,9 @@ import {
   OsmCampusTransformer,
   type OsmData
 } from '../campusdata/OsmCampusTransformer';
-import { polygonCentroid } from '../campusdata/geo';
 import { RouteController } from '../controller/RouteController';
 import type { Building } from '../ui/types';
+import { BuildingCatalog } from './BuildingCatalog';
 
 // Load Anthony's real OSM export from disk.
 class DiskOsmCampusDataSource implements CampusDataSource {
@@ -24,8 +23,8 @@ class DiskOsmCampusDataSource implements CampusDataSource {
     const osm = JSON.parse(raw) as OsmData;
 
     const transformer = new OsmCampusTransformer({
-      // Create approximate, unverified entrances where OSM
-      // does not have a mapped entrance.
+      // Approximate, unverified entrances where OSM
+      // does not contain a mapped entrance.
       fallbackEntranceDistanceM: 45
     });
 
@@ -45,46 +44,11 @@ const repository = new CampusRepository(
   new DiskOsmCampusDataSource()
 );
 
+const buildingCatalog = new BuildingCatalog(repository);
+
 export const routeController = new RouteController(repository);
 
 export async function listBuildings(): Promise<Building[]> {
   await routeController.ensureLoaded();
-
-  const graph = repository.getGraph();
-  const result: Building[] = [];
-  const excludedBuildingIds = new Set([
-  'b537018065', // McDonald's
-  'b405432420', // Hilton Garden Inn
-  'b562875867', // Mesa Hills Healthcare Residence
-  'b753039204', // Providence Memorial Hospital
-  'b794278838' // Traffic Control Booth 1
-  ]);
-
-  for (const b of repository.getBuildings()) {
-	if (excludedBuildingIds.has(b.id)) continue;
-    let coordinates =
-      b.centroid ??
-      (b.footprint
-        ? polygonCentroid(b.footprint)
-        : undefined);
-
-    if (!coordinates) {
-      const entrance = repository.getEntrances(b.id)[0];
-      const node = entrance && graph.getNode(entrance.nodeId);
-
-      if (node) {
-        coordinates = [node.lng, node.lat];
-      }
-    }
-
-    if (coordinates) {
-      result.push({
-        id: b.id,
-        name: b.name,
-        coordinates: [coordinates[0], coordinates[1]]
-      });
-    }
-  }
-
-  return result;
+  return buildingCatalog.listBuildings();
 }
