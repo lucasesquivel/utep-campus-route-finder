@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import { CampusRepository } from '../campusdata/CampusRepository';
 import type { CampusDataSource } from '../campusdata/CampusDataSource';
+import { CachingCampusDataSource } from '../campusdata/CachingCampusDataSource';
 import {
   OsmCampusTransformer,
   type OsmData
@@ -41,7 +42,9 @@ class DiskOsmCampusDataSource implements CampusDataSource {
 }
 
 const repository = new CampusRepository(
-  new DiskOsmCampusDataSource()
+  new CachingCampusDataSource(
+    new DiskOsmCampusDataSource()
+  )
 );
 
 const buildingCatalog = new BuildingCatalog(repository);
