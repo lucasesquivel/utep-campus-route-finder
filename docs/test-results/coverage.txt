@@ -1,0 +1,46 @@
+$ bunx vitest --run --project server --coverage (v8; src/lib/**/*.ts, test files excluded)
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   90.13 |    88.13 |   93.75 |   91.22 |                   
+ lib               |       0 |        0 |       0 |       0 |                   
+  index.ts         |       0 |        0 |       0 |       0 |                   
+ lib/campusdata    |   94.29 |    90.03 |   98.71 |   96.23 |                   
+  ...orrections.ts |     100 |      100 |     100 |     100 |                   
+  ...DataSource.ts |       0 |        0 |       0 |       0 |                   
+  CampusGraph.ts   |     100 |      100 |     100 |     100 |                   
+  ...Repository.ts |   96.03 |    94.36 |     100 |     100 | 230-239           
+  ...DataSource.ts |     100 |      100 |     100 |     100 |                   
+  ...ransformer.ts |   85.23 |    79.31 |   94.73 |   88.09 | ...65,304,346-348 
+  ...aphAdapter.ts |     100 |      100 |     100 |     100 |                   
+  ...DataSource.ts |     100 |      100 |     100 |     100 |                   
+  errors.ts        |     100 |      100 |     100 |     100 |                   
+  fetchJson.ts     |     100 |      100 |     100 |     100 |                   
+  geo.ts           |     100 |      100 |     100 |     100 |                   
+  index.ts         |       0 |        0 |       0 |       0 |                   
+  topology.ts      |     100 |       90 |     100 |     100 | 27,51             
+  types.ts         |       0 |        0 |       0 |       0 |                   
+ lib/controller    |   76.23 |    65.33 |      80 |   76.76 |                   
+  ...Controller.ts |   76.23 |    65.33 |      80 |   76.76 | ...39-141,248-277 
+  types.ts         |       0 |        0 |       0 |       0 |                   
+ lib/routing       |   98.11 |    94.47 |     100 |   98.96 |                   
+  ...teStrategy.ts |     100 |      100 |     100 |     100 |                   
+  ...teStrategy.ts |     100 |      100 |     100 |     100 |                   
+  ...orityQueue.ts |     100 |      100 |     100 |     100 |                   
+  Route.ts         |     100 |      100 |     100 |     100 |                   
+  RouteEngine.ts   |   96.58 |     86.2 |     100 |   97.16 | 21-22,225         
+  ...ngStrategy.ts |     100 |      100 |     100 |     100 |                   
+  ...teStrategy.ts |     100 |      100 |     100 |     100 |                   
+  ...usDataView.ts |     100 |      100 |     100 |     100 |                   
+  errors.ts        |     100 |      100 |     100 |     100 |                   
+  index.ts         |       0 |        0 |       0 |       0 |                   
+  testFixtures.ts  |   95.83 |    96.07 |     100 |     100 | 80,143            
+  types.ts         |       0 |        0 |       0 |       0 |                   
+ lib/shared        |    90.9 |      100 |     100 |    90.9 |                   
+  haversine.ts     |     100 |      100 |     100 |     100 |                   
+  types.ts         |       0 |      100 |     100 |       0 | 6                 
+ lib/ui            |   44.77 |       88 |      50 |    43.1 |                   
+  ...reRenderer.ts |       0 |        0 |       0 |       0 | 6-92              
+  MapRenderer.ts   |       0 |        0 |       0 |       0 |                   
+  RouteService.ts  |     100 |      100 |     100 |     100 |                   
+  types.ts         |     100 |      100 |     100 |     100 |                   
+-------------------|---------|----------|---------|---------|-------------------

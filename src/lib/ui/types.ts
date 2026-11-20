@@ -3,28 +3,28 @@ export type RouteMode = 'shortest' | 'easy' | 'ada';
 export type LngLat = [longitude: number, latitude: number];
 
 export interface Building {
-  id: string;
-  name: string;
-  coordinates: LngLat;
+	id: string;
+	name: string;
+	coordinates: LngLat;
 }
 
 export interface RouteRequest {
-  startBuildingId: string;
-  destinationBuildingId: string;
-  mode: RouteMode;
+	startBuildingId: string;
+	destinationBuildingId: string;
+	mode: RouteMode;
 }
 
 export interface RouteResult {
-  /** Ordered [longitude, latitude] points along the walking route. */
-  coordinates: LngLat[];
-  distanceMeters?: number;
-  estimatedMinutes?: number;
-  instructions?: string[];
+	/** Ordered [longitude, latitude] points along the walking route. */
+	coordinates: LngLat[];
+	distanceMeters?: number;
+	estimatedMinutes?: number;
+	instructions?: string[];
 }
 
 export class NoRouteError extends Error {
-  constructor(message = 'No walking route is available for these selections.') {
-    super(message);
-    this.name = 'NoRouteError';
-  }
+	constructor(message = 'No walking route is available for these selections.') {
+		super(message);
+		this.name = 'NoRouteError';
+	}
 }

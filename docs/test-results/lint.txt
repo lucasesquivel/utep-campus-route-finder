@@ -1,0 +1,19 @@
+$ bun run lint
+$ prettier --check . && eslint .
+Checking formatting...
+[warn] src/lib/controller/RouteController.ts
+[warn] src/lib/controller/types.ts
+[warn] src/lib/ui/components/BuildingSelector.svelte
+[warn] src/lib/ui/components/CampusMap.svelte
+[warn] src/lib/ui/components/RouteControls.svelte
+[warn] src/lib/ui/components/RouteFeedback.svelte
+[warn] src/lib/ui/components/RoutingModeSelector.svelte
+[warn] src/lib/ui/MapLibreRenderer.ts
+[warn] src/lib/ui/MapRenderer.ts
+[warn] src/lib/ui/RouteService.test.ts
+[warn] src/lib/ui/RouteService.ts
+[warn] src/lib/ui/types.ts
+[warn] src/routes/+page.svelte
+[warn] Code style issues found in 13 files. Run Prettier with --write to fix.
+error: script "lint" exited with code 1
+[exit code: 1]

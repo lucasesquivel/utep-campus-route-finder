@@ -1,0 +1,58 @@
+$ bun run build
+$ vite build
+vite v8.3.5 building ssr environment for production...
+transforming...
+✓ 165 modules transformed.
+rendering chunks...
+computing gzip size...
+.svelte-kit/output/server/.vite/manifest.json                                    2.81 kB │ gzip:  0.53 kB
+.svelte-kit/output/server/_app/immutable/assets/_page.UH6ATwfN.css              74.19 kB │ gzip: 11.13 kB
+.svelte-kit/output/server/chunks/index-server.js                                 0.03 kB │ gzip:  0.05 kB
+.svelte-kit/output/server/env.js                                                 0.29 kB │ gzip:  0.18 kB │ map:   0.57 kB
+.svelte-kit/output/server/entries/pages/_layout.svelte.js                        0.86 kB │ gzip:  0.52 kB │ map:   1.02 kB
+.svelte-kit/output/server/entries/fallbacks/error.svelte.js                      1.06 kB │ gzip:  0.42 kB │ map:   2.58 kB
+.svelte-kit/output/server/index.js                                               2.24 kB │ gzip:  0.90 kB │ map:   3.32 kB
+.svelte-kit/output/server/entries/pages/_page.svelte.js                         11.42 kB │ gzip:  3.29 kB │ map:  22.71 kB
+.svelte-kit/output/server/entries/endpoints/campus-data-example/_server.ts.js   16.37 kB │ gzip:  4.96 kB │ map:  43.14 kB
+.svelte-kit/output/server/chunks/server-errors.js                               23.96 kB │ gzip:  4.49 kB │ map:  34.73 kB
+.svelte-kit/output/server/chunks/server.js                                      43.95 kB │ gzip: 12.22 kB │ map: 125.94 kB
+.svelte-kit/output/server/remote-entry.js                                       54.23 kB │ gzip: 11.81 kB │ map:  89.76 kB
+.svelte-kit/output/server/chunks/internal.js                                    87.86 kB │ gzip: 24.13 kB │ map: 192.25 kB
+.svelte-kit/output/server/chunks/instance.js                                   117.51 kB │ gzip: 31.65 kB │ map: 239.95 kB
+
+✓ built in 123ms
+Analysing routes
+Building app
+vite v8.3.5 building client environment for production...
+transforming...
+✓ 189 modules transformed.
+rendering chunks...
+computing gzip size...
+.svelte-kit/output/client/_app/version.json                             0.02 kB │ gzip:   0.04 kB
+.svelte-kit/output/client/.vite/manifest.json                           3.20 kB │ gzip:   0.58 kB
+.svelte-kit/output/client/_app/immutable/assets/2.UH6ATwfN.css         74.19 kB │ gzip:  11.13 kB
+.svelte-kit/output/client/_app/immutable/entry/payload.DSmR2FwN.js      0.06 kB │ gzip:   0.07 kB
+.svelte-kit/output/client/_app/immutable/nodes/1.BKz1zW8A.js            0.32 kB │ gzip:   0.24 kB
+.svelte-kit/output/client/_app/immutable/entry/start.Bfv2mut7.js        0.52 kB │ gzip:   0.30 kB
+.svelte-kit/output/client/_app/immutable/nodes/0.B6Uj9RET.js            0.66 kB │ gzip:   0.44 kB
+.svelte-kit/output/client/_app/immutable/entry/app.CqUWCFOI.js          1.09 kB │ gzip:   0.56 kB
+.svelte-kit/output/client/_app/immutable/chunks/Bjy-W4x2.js             1.36 kB │ gzip:   0.65 kB
+.svelte-kit/output/client/_app/immutable/chunks/CRzLMJPS.js             1.53 kB │ gzip:   0.80 kB
+.svelte-kit/output/client/_app/immutable/chunks/DuMP3Dmq.js             4.29 kB │ gzip:   1.93 kB
+.svelte-kit/output/client/_app/immutable/chunks/B8JS-sXp.js            39.72 kB │ gzip:  14.68 kB
+.svelte-kit/output/client/_app/immutable/chunks/DrvyBfv3.js            41.24 kB │ gzip:  16.02 kB
+.svelte-kit/output/client/_app/immutable/nodes/2.Cb4Dsp5h.js        1,092.78 kB │ gzip: 297.41 kB
+
+[plugin builtin:vite-reporter] 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 230ms
+
+Run npm run preview to preview your production build locally.
+
+> Using @sveltejs/adapter-auto
+Could not detect a supported production environment. See https://svelte.dev/docs/kit/adapters to learn how to configure your app to run on the platform of your choosing
+✔ done
+[exit code: 0]
