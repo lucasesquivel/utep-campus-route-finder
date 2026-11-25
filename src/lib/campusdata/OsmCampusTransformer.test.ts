@@ -106,7 +106,7 @@ describe('OsmCampusTransformer topology', () => {
 	it('uses only the configured walkable highway types', () => {
 		expect(transform().data.edges.some((e) => e.id === 'w5:0')).toBe(true);
 		const withoutService = transform({
-    		walkableHighways: ['footway', 'steps']
+			walkableHighways: ['footway', 'steps']
 		});
 
 		expect(withoutService.data.edges.some((e) => e.id === 'w5:0')).toBe(false);
