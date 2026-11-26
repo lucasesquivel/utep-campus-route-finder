@@ -105,20 +105,32 @@ OSM.
 ## Integration status
 
 - `ElevationDataset` (`src/lib/campusdata/ElevationDataset.ts`) loads the file and validates it.
-- The app (`src/lib/server/campus.ts`) attaches the elevations to graph nodes with
-  `transformOptions(false)`. **No slope reaches Routing**, so Easiest and ADA routing are
-  unchanged. Route summaries now report elevation gain and loss.
+- The app (`src/lib/server/campus.ts`) attaches the elevations to graph nodes and enables slopes
+  with `transformOptions(true, true)`, so **slopes now reach Routing and Easiest routing uses
+  them** (Shortest and ADA are unchanged). Route summaries also report elevation gain and loss.
+- A segment gets a slope in one of three ways:
+  1. A numeric OSM `incline` tag, if the way has one.
+  2. Its own DEM grade, when no slope issue was found for it (about 1,250 segments).
+  3. Smoothing, when "too short" is its **only** issue: the grade is measured over a stretch of
+     the same way, built from the segment and its neighbors until it is at least 15 m long.
+     Neighbors with any other issue (structure, terrain discontinuity, irregular profile,
+     steep-needs-validation) cannot join the stretch, and a way too short to reach 15 m gets no
+     slope.
+- Stairs never get a derived slope. Segments with any other issue keep no slope, and a missing
+  slope adds no penalty in Easiest routing: unknown facts are not guessed.
+- Result: 75% of walkable (non-stair) segments have a slope, up from 39% with reliable-only
+  slopes. Smoothing adds 1,153 slopes with a median grade of 1.9%, 90th percentile 5.7% and
+  maximum 11.2%; it never changes a slope that was already reliable.
 - Gain and loss on routes over footbridges are overstated, because nodes on a bridge get the
   ground elevation beneath it. The net change between the route's ends is unaffected.
+- Tests: `src/lib/campusdata/SlopeSmoothing.test.ts` (synthetic path) and
+  `src/lib/integration/SlopeAwareEasyRouting.test.ts` (real data and real routes).
 
-## Before enabling slope-aware routing
+## Still to do before relying on the slopes
 
 1. Field-check the 10 segments above and a sample of reliable segments steeper than 8.33%.
 2. Confirm the dataset's vertical accuracy, or measure it against a few surveyed points.
-3. Decide how to treat short segments. They lose their slope today; a grade averaged over a
-   longer stretch of the same path would keep the information without the noise.
-4. Then switch to `transformOptions(true)`, which derives slopes only for reliable segments,
-   and update the routing tests.
+3. Tune the Easiest cost constants (`EasyRouteStrategy`) on real UTEP routes.
 
 ## Known limitations
 
