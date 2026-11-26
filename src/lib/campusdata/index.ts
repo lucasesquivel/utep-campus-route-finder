@@ -7,6 +7,12 @@ export { OsmCampusDataSource } from './OsmCampusDataSource';
 export { OsmCampusTransformer } from './OsmCampusTransformer';
 export { DEFAULT_WALKABLE_HIGHWAYS } from './OsmCampusTransformer';
 export { applyCorrections, type CampusCorrections } from './CampusCorrections';
+export {
+	ElevationDataset,
+	ELEVATION_FILE_FORMAT,
+	type ElevationFile,
+	type SlopeIssue
+} from './ElevationDataset';
 export { findConnectedComponents, describeDisconnectedComponents } from './topology';
 export type {
 	OsmData,
