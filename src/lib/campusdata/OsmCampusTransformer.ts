@@ -51,6 +51,10 @@ export interface OsmCampusTransformOptions {
 	deriveSlopeFromElevation?: boolean;
 	/** When deriving slopes, skip segments this returns false for (e.g. bridges, short segments). */
 	isSlopeReliable?: (segmentId: string) => boolean;
+	/** Segments this returns true for are too short for their own slope, so a longer stretch of the way is used. */
+	isSlopeSmoothable?: (segmentId: string) => boolean;
+	/** Minimum stretch length, in meters, for smoothing short segments. Default 15. */
+	smoothingWindowM?: number;
 }
 
 export interface OsmTransformResult {
@@ -95,6 +99,8 @@ export class OsmCampusTransformer {
 	private readonly elevationLookup?: OsmCampusTransformOptions['elevationLookup'];
 	private readonly deriveSlopeFromElevation: boolean;
 	private readonly isSlopeReliable: (segmentId: string) => boolean;
+	private readonly isSlopeSmoothable: (segmentId: string) => boolean;
+	private readonly smoothingWindowM: number;
 
 	constructor(options: OsmCampusTransformOptions = {}) {
 		this.snapDistanceM = options.snapDistanceM ?? 30;
@@ -104,6 +110,8 @@ export class OsmCampusTransformer {
 		this.elevationLookup = options.elevationLookup;
 		this.deriveSlopeFromElevation = options.deriveSlopeFromElevation ?? false;
 		this.isSlopeReliable = options.isSlopeReliable ?? (() => true);
+		this.isSlopeSmoothable = options.isSlopeSmoothable ?? (() => false);
+		this.smoothingWindowM = options.smoothingWindowM ?? 15;
 	}
 
 	transform(osm: OsmData): OsmTransformResult {
@@ -187,38 +195,65 @@ export class OsmCampusTransformer {
 				}
 			}
 
+			const segments: PathSegment[] = [];
 			for (let i = 0; i < refs.length - 1; i++) {
 				if (refs[i] === refs[i + 1]) continue;
 				const a = nodes.get(`n${refs[i]}`)!;
 				const b = nodes.get(`n${refs[i + 1]}`)!;
-				const distanceM = haversineM(a.lat, a.lng, b.lat, b.lng);
+				segments.push({
+					id: `w${way.id}:${i}`,
+					a,
+					b,
+					distanceM: haversineM(a.lat, a.lng, b.lat, b.lng)
+				});
+			}
 
-				const segmentId = `w${way.id}:${i}`;
-				let slopePct = taggedSlope;
-				if (
-					slopePct === undefined &&
-					this.deriveSlopeFromElevation &&
-					this.isSlopeReliable(segmentId) &&
-					a.elevationM !== undefined &&
-					b.elevationM !== undefined &&
-					distanceM > 0
-				) {
-					slopePct = Math.round(((b.elevationM - a.elevationM) / distanceM) * 10000) / 100;
-				}
-
+			segments.forEach((segment, index) => {
+				const slopePct =
+					taggedSlope ?? (hasStairs ? undefined : this.derivedSlope(segments, index));
 				edges.push({
-					id: segmentId,
-					fromId: a.id,
-					toId: b.id,
-					distanceM,
+					id: segment.id,
+					fromId: segment.a.id,
+					toId: segment.b.id,
+					distanceM: segment.distanceM,
 					slopePct,
 					hasStairs,
 					hasRamp,
 					accessibility
 				});
-			}
+			});
 		}
 		return { nodes: [...nodes.values()], edges };
+	}
+
+	/** Slope from elevations: own grade if reliable, a 15 m stretch if only too short, else none. */
+	private derivedSlope(segments: PathSegment[], index: number): number | undefined {
+		if (!this.deriveSlopeFromElevation) return undefined;
+		const segment = segments[index];
+		if (this.isSlopeReliable(segment.id))
+			return gradePercent(segment.a, segment.b, segment.distanceM);
+		if (!this.isSlopeSmoothable(segment.id)) return undefined;
+
+		const usable = (i: number) =>
+			this.isSlopeReliable(segments[i].id) || this.isSlopeSmoothable(segments[i].id);
+		let first = index;
+		let last = index;
+		let length = segment.distanceM;
+		let forward = true;
+		while (length < this.smoothingWindowM) {
+			const canForward = last + 1 < segments.length && usable(last + 1);
+			const canBackward = first > 0 && usable(first - 1);
+			if (!canForward && !canBackward) return undefined;
+			if ((forward && canForward) || !canBackward) {
+				last++;
+				length += segments[last].distanceM;
+			} else {
+				first--;
+				length += segments[first].distanceM;
+			}
+			forward = !forward;
+		}
+		return gradePercent(segments[first].a, segments[last].b, length);
 	}
 
 	/* ---------- buildings ---------- */
@@ -373,4 +408,18 @@ function parseIncline(value: string | undefined): number | undefined {
 	const deg = /^(-?\d+(?:\.\d+)?)\s*°$/.exec(value.trim());
 	if (deg) return Math.round(Math.tan((Number.parseFloat(deg[1]) * Math.PI) / 180) * 10000) / 100;
 	return undefined;
+}
+
+interface PathSegment {
+	id: string;
+	a: RawNode;
+	b: RawNode;
+	distanceM: number;
+}
+
+/** Rise over run in percent, rounded to 2 decimals; undefined without both elevations. */
+function gradePercent(a: RawNode, b: RawNode, distanceM: number): number | undefined {
+	if (a.elevationM === undefined || b.elevationM === undefined || !(distanceM > 0))
+		return undefined;
+	return Math.round(((b.elevationM - a.elevationM) / distanceM) * 10000) / 100;
 }

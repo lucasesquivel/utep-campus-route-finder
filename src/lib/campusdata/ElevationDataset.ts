@@ -92,17 +92,25 @@ export class ElevationDataset {
 		return !this.issues.has(segmentId);
 	}
 
+	/** True when "too short" is the only reason this segment's own slope is unreliable. */
+	isSlopeSmoothable(segmentId: string): boolean {
+		const issues = this.issues.get(segmentId);
+		return issues !== undefined && issues.length > 0 && issues.every((i) => i === 'short-segment');
+	}
+
 	/**
 	 * Transformer options that attach these elevations to graph nodes. Slopes are derived
 	 * from elevation only when deriveSlopes is true, and then only for reliable segments.
-	 * Keep deriveSlopes false until the team has validated the slopes (Easiest routing
-	 * reacts to slopes as soon as they are present).
+	 * With smoothShortSegments, segments flagged only as too short get a longer stretch's grade.
 	 */
-	transformOptions(deriveSlopes = false): OsmCampusTransformOptions {
+	transformOptions(deriveSlopes = false, smoothShortSegments = false): OsmCampusTransformOptions {
 		return {
 			elevationLookup: (_lat, _lng, osmNodeId) => this.elevationOf(osmNodeId),
 			deriveSlopeFromElevation: deriveSlopes,
-			isSlopeReliable: (segmentId) => this.isSlopeReliable(segmentId)
+			isSlopeReliable: (segmentId) => this.isSlopeReliable(segmentId),
+			isSlopeSmoothable: smoothShortSegments
+				? (segmentId) => this.isSlopeSmoothable(segmentId)
+				: undefined
 		};
 	}
 }

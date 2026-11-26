@@ -25,7 +25,7 @@ class DiskOsmCampusDataSource implements CampusDataSource {
     const osm = JSON.parse(raw) as OsmData;
 
     // USGS 1 m DEM elevations preprocessed by scripts/preprocess-dem.ts.
-    // Slopes stay disabled (false) until the DEM slopes are validated.
+    // Slopes on: own grade when reliable, a longer stretch's grade when only too short.
     const elevationFile = path.resolve(
       process.cwd(),
       'static/data/campus-elevation.json'
@@ -38,7 +38,7 @@ class DiskOsmCampusDataSource implements CampusDataSource {
       // Approximate, unverified entrances where OSM
       // does not contain a mapped entrance.
       fallbackEntranceDistanceM: 45,
-      ...elevation.transformOptions(false)
+      ...elevation.transformOptions(true, true)
     });
 
     const result = transformer.transform(osm);
