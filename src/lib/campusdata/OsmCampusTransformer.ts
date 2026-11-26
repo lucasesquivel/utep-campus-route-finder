@@ -38,8 +38,19 @@ export interface OsmCampusTransformOptions {
 	walkableHighways?: readonly string[];
 	/** Keep buildings that have no name. Default false (users cannot select them). */
 	includeUnnamedBuildings?: boolean;
-	/** Optional elevation source (e.g., DEM) used when a node has no `ele` tag. */
-	elevationLookup?: (lat: number, lng: number) => number | undefined;
+	/**
+	 * Optional elevation source (e.g. the preprocessed DEM, see ElevationDataset) used when a
+	 * node has no `ele` tag. Receives the node's coordinates and its OSM node id.
+	 */
+	elevationLookup?: (lat: number, lng: number, osmNodeId: number) => number | undefined;
+	/**
+	 * Derive a segment's slope from its endpoint elevations when OSM has no numeric `incline`.
+	 * Default false: elevations are recorded on nodes, but no slope reaches Routing until the
+	 * team has validated the DEM slopes.
+	 */
+	deriveSlopeFromElevation?: boolean;
+	/** When deriving slopes, skip segments this returns false for (e.g. bridges, short segments). */
+	isSlopeReliable?: (segmentId: string) => boolean;
 }
 
 export interface OsmTransformResult {
@@ -48,12 +59,21 @@ export interface OsmTransformResult {
 	warnings: string[];
 }
 
+/**
+ * OSM `highway` values walked by default: dedicated pedestrian ways, plus campus service lanes
+ * and shared cycle/living streets. On the UTEP export, adding `service` joins the last mapped
+ * entrances to the main network. Public streets (residential, secondary...) stay excluded;
+ * where OSM maps their sidewalks, those are separate footways and are included.
+ */
 export const DEFAULT_WALKABLE_HIGHWAYS: readonly string[] = Object.freeze([
 	'footway',
 	'path',
 	'steps',
 	'pedestrian',
-	'corridor'
+	'corridor',
+	'cycleway',
+	'living_street',
+	'service'
 ]);
 const SKIPPED_ENTRANCES = new Set(['no', 'emergency', 'service']);
 
@@ -72,7 +92,9 @@ export class OsmCampusTransformer {
 	private readonly fallbackEntranceDistanceM: number;
 	private readonly walkableHighways: ReadonlySet<string>;
 	private readonly includeUnnamedBuildings: boolean;
-	private readonly elevationLookup?: (lat: number, lng: number) => number | undefined;
+	private readonly elevationLookup?: OsmCampusTransformOptions['elevationLookup'];
+	private readonly deriveSlopeFromElevation: boolean;
+	private readonly isSlopeReliable: (segmentId: string) => boolean;
 
 	constructor(options: OsmCampusTransformOptions = {}) {
 		this.snapDistanceM = options.snapDistanceM ?? 30;
@@ -80,6 +102,8 @@ export class OsmCampusTransformer {
 		this.walkableHighways = new Set(options.walkableHighways ?? DEFAULT_WALKABLE_HIGHWAYS);
 		this.includeUnnamedBuildings = options.includeUnnamedBuildings ?? false;
 		this.elevationLookup = options.elevationLookup;
+		this.deriveSlopeFromElevation = options.deriveSlopeFromElevation ?? false;
+		this.isSlopeReliable = options.isSlopeReliable ?? (() => true);
 	}
 
 	transform(osm: OsmData): OsmTransformResult {
@@ -133,7 +157,7 @@ export class OsmCampusTransformer {
 	private elevationOf(el: OsmElement): number | undefined {
 		const ele = Number.parseFloat(el.tags?.ele ?? '');
 		if (Number.isFinite(ele)) return ele;
-		return this.elevationLookup?.(el.lat!, el.lon!);
+		return this.elevationLookup?.(el.lat!, el.lon!, el.id);
 	}
 
 	private buildPaths(ways: OsmElement[], osmNodes: Map<number, OsmElement>, warnings: string[]) {
@@ -169,9 +193,12 @@ export class OsmCampusTransformer {
 				const b = nodes.get(`n${refs[i + 1]}`)!;
 				const distanceM = haversineM(a.lat, a.lng, b.lat, b.lng);
 
+				const segmentId = `w${way.id}:${i}`;
 				let slopePct = taggedSlope;
 				if (
 					slopePct === undefined &&
+					this.deriveSlopeFromElevation &&
+					this.isSlopeReliable(segmentId) &&
 					a.elevationM !== undefined &&
 					b.elevationM !== undefined &&
 					distanceM > 0
@@ -180,7 +207,7 @@ export class OsmCampusTransformer {
 				}
 
 				edges.push({
-					id: `w${way.id}:${i}`,
+					id: segmentId,
 					fromId: a.id,
 					toId: b.id,
 					distanceM,

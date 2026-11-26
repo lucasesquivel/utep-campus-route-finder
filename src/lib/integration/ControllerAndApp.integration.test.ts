@@ -207,32 +207,65 @@ describe('The real /api/route endpoint and the page data', () => {
 			request: new Request('http://localhost/api/route', { method: 'POST', body })
 		} as Parameters<typeof POST>[0]);
 
-	it('POST /api/route returns a drawable route for Union -> Engineering (shortest)', async () => {
+	it('POST /api/route returns a drawable real-campus route from Old Main to University Library', async () => {
 		const response = await post(
 			JSON.stringify({
-				startBuildingId: 'b_union',
-				destinationBuildingId: 'b_eng',
+				startBuildingId: 'b334627381',       // Old Main
+				destinationBuildingId: 'b334627361', // University Library
 				mode: 'shortest'
 			})
 		);
+
 		expect(response.status).toBe(200);
+
 		const parsed = parseRouteResult(await response.json());
-		expect(parsed.distanceMeters).toBeCloseTo(191.3, 1);
+
+		expect(parsed.distanceMeters).toBeGreaterThan(0);
+		expect(parsed.estimatedMinutes).toBeGreaterThan(0);
+		expect(parsed.coordinates.length).toBeGreaterThanOrEqual(2);
+
+		for (const coordinate of parsed.coordinates) {
+			expect(Number.isFinite(coordinate[0])).toBe(true);
+			expect(Number.isFinite(coordinate[1])).toBe(true);
+		}
 	});
 
 	it('POST /api/route answers 400 when the body is not JSON', async () => {
 		expect((await post('not json')).status).toBe(400);
 	});
 
-	it('offers only building ids that exist in the campus data', async () => {
-		const repo = new CampusRepository({ load: async () => seed() });
-		await repo.loadCampusData();
-		const campusIds = repo.getBuildings().map((b) => b.id);
+	it('offers real campus buildings while excluding unwanted destinations', async () => {
 		const pageBuildings = await listBuildings();
-		expect(pageBuildings.map((b) => b.id).sort()).toEqual(campusIds.sort());
-		for (const b of pageBuildings) {
-			expect(Number.isFinite(b.coordinates[0])).toBe(true);
-			expect(Number.isFinite(b.coordinates[1])).toBe(true);
+		const ids = pageBuildings.map((b) => b.id);
+
+		expect(ids).toContain('b334627381'); // Old Main
+		expect(ids).toContain('b334627361'); // University Library
+		expect(ids).toContain('b334627342'); // Union Complex
+
+		const excludedIds = [
+			'b537018065', // McDonald's
+			'b405432420', // Hilton Garden Inn
+			'b562875867', // Mesa Hills Healthcare Residence
+			'b753039204', // Providence Memorial Hospital
+			'b794278838' // Traffic Control Booth 1
+		];
+
+		for (const excludedId of excludedIds) {
+			expect(ids).not.toContain(excludedId);
+		}
+
+		expect(new Set(ids).size).toBe(ids.length);
+
+		for (const building of pageBuildings) {
+			expect(building.name.trim().length).toBeGreaterThan(0);
+
+			expect(Number.isFinite(building.coordinates[0])).toBe(true);
+			expect(Number.isFinite(building.coordinates[1])).toBe(true);
+
+			expect(building.coordinates[0]).toBeGreaterThanOrEqual(-180);
+			expect(building.coordinates[0]).toBeLessThanOrEqual(180);
+			expect(building.coordinates[1]).toBeGreaterThanOrEqual(-90);
+			expect(building.coordinates[1]).toBeLessThanOrEqual(90);
 		}
 	});
 });

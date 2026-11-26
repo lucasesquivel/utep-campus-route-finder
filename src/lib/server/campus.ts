@@ -1,42 +1,69 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
+
 import { CampusRepository } from '../campusdata/CampusRepository';
 import type { CampusDataSource } from '../campusdata/CampusDataSource';
-import { polygonCentroid } from '../campusdata/geo';
-import type { RawCampusData } from '../campusdata/types';
+import { CachingCampusDataSource } from '../campusdata/CachingCampusDataSource';
+import { ElevationDataset, type ElevationFile } from '../campusdata/ElevationDataset';
+import {
+  OsmCampusTransformer,
+  type OsmData
+} from '../campusdata/OsmCampusTransformer';
 import { RouteController } from '../controller/RouteController';
 import type { Building } from '../ui/types';
+import { BuildingCatalog } from './BuildingCatalog';
 
-/** Reads the campus data file straight from disk (the server does not need to download it). */
-class DiskCampusDataSource implements CampusDataSource {
-	constructor(private readonly file: string) {}
+// Load Anthony's real OSM export from disk.
+class DiskOsmCampusDataSource implements CampusDataSource {
+  async load() {
+    const file = path.resolve(
+      process.cwd(),
+      'static/data/campus-osm.json'
+    );
 
-	async load(): Promise<RawCampusData> {
-		return JSON.parse(await readFile(this.file, 'utf8')) as RawCampusData;
-	}
+    const raw = await readFile(file, 'utf8');
+    const osm = JSON.parse(raw) as OsmData;
+
+    // USGS 1 m DEM elevations preprocessed by scripts/preprocess-dem.ts.
+    // Slopes stay disabled (false) until the DEM slopes are validated.
+    const elevationFile = path.resolve(
+      process.cwd(),
+      'static/data/campus-elevation.json'
+    );
+    const elevation = new ElevationDataset(
+      JSON.parse(await readFile(elevationFile, 'utf8')) as ElevationFile
+    );
+
+    const transformer = new OsmCampusTransformer({
+      // Approximate, unverified entrances where OSM
+      // does not contain a mapped entrance.
+      fallbackEntranceDistanceM: 45,
+      ...elevation.transformOptions(false)
+    });
+
+    const result = transformer.transform(osm);
+
+    console.log(
+      `Loaded ${result.data.buildings.length} OSM buildings, ` +
+      `${result.data.nodes.length} nodes, ` +
+      `${result.data.edges.length} edges`
+    );
+
+    return result.data;
+  }
 }
 
 const repository = new CampusRepository(
-	new DiskCampusDataSource(path.resolve(process.cwd(), 'static/data/campus.json'))
+  new CachingCampusDataSource(
+    new DiskOsmCampusDataSource()
+  )
 );
 
-/** One shared Controller for the whole server: campus data is loaded once, not per request. */
+const buildingCatalog = new BuildingCatalog(repository);
+
 export const routeController = new RouteController(repository);
 
-/** Buildings in the shape the page's dropdowns and map markers need. */
 export async function listBuildings(): Promise<Building[]> {
-	await routeController.ensureLoaded();
-	const graph = repository.getGraph();
-	const result: Building[] = [];
-	for (const b of repository.getBuildings()) {
-		let coordinates = b.centroid ?? (b.footprint ? polygonCentroid(b.footprint) : undefined);
-		if (!coordinates) {
-			const entrance = repository.getEntrances(b.id)[0];
-			const node = entrance && graph.getNode(entrance.nodeId);
-			if (node) coordinates = [node.lng, node.lat];
-		}
-		if (coordinates)
-			result.push({ id: b.id, name: b.name, coordinates: [coordinates[0], coordinates[1]] });
-	}
-	return result;
+  await routeController.ensureLoaded();
+  return buildingCatalog.listBuildings();
 }

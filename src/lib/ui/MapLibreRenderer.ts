@@ -1,11 +1,14 @@
 import * as maplibregl from 'maplibre-gl';
 import type { Map as MapLibreMap, GeoJSONSource, Marker } from 'maplibre-gl';
+import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import type { MapRenderer } from './MapRenderer';
 import type { Building, RouteResult } from './types';
 
 const ROUTE_SOURCE = 'selected-walking-route';
 const ROUTE_LAYER = 'selected-walking-route-line';
 const UTEP_CENTER: [number, number] = [-106.504, 31.771];
+
+maplibregl.setWorkerUrl(workerUrl);
 
 /** MapLibre is for display only. It never computes a path. */
 export class MapLibreRenderer implements MapRenderer {
