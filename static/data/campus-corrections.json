@@ -1,6 +1,21 @@
 {
 	"nodes": [],
 	"edges": [],
-	"entrances": [],
+	"entrances": [
+		{
+			"id": "en_b423676556_ada",
+			"buildingId": "b423676556",
+			"nodeId": "n13784099370",
+			"accessibility": "unknown",
+			"note": "Added 2026-11-26 by Christian Pintor. The inferred entrance (n13784099372) was reachable only by stairs, so ADA routes returned NO_ROUTE. This entrance uses the nearest stair-free path point, at the building's southeast corner on West Schuster Avenue. Checked in the app on 2026-11-26: ADA route from University Library succeeds (0.69 km). The physical door at this corner has not yet been confirmed on site."
+		},
+		{
+			"id": "en_b334627353_ada",
+			"buildingId": "b334627353",
+			"nodeId": "n9802146258",
+			"accessibility": "unknown",
+			"note": "Added 2026-11-26 by Christian Pintor. The inferred entrance (n13743989855) was reachable only by stairs, so ADA routes returned NO_ROUTE. This entrance uses the nearest stair-free path point, on the building's east side off Kerbey Avenue. Checked in the app on 2026-11-26: ADA route from University Library succeeds (0.63 km). The physical door on this side has not yet been confirmed on site."
+		}
+	],
 	"edgeAccessibility": []
 }

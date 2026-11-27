@@ -6,6 +6,7 @@ export { StaticFileCampusDataSource } from './StaticFileCampusDataSource';
 export { OsmCampusDataSource } from './OsmCampusDataSource';
 export { OsmCampusTransformer } from './OsmCampusTransformer';
 export { DEFAULT_WALKABLE_HIGHWAYS } from './OsmCampusTransformer';
+export { CampusBoundary, type CampusBoundaryFile } from './CampusBoundary';
 export { applyCorrections, type CampusCorrections } from './CampusCorrections';
 export {
 	ElevationDataset,

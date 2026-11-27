@@ -83,13 +83,16 @@ describe('real UTEP export: buildings and entrances', () => {
 		expect(repo.getEntrances(buildingId('Undergraduate Learning Center'))).toEqual([]);
 	});
 
-	it('uses only mapped entrances, all of unknown accessibility', () => {
+	it('uses the mapped OSM entrances plus the team corrections, all of unknown accessibility', () => {
 		const entrances = repo.getBuildings().flatMap((b) => repo.getEntrances(b.id));
-		expect(entrances).toHaveLength(12);
-		expect(entrances.every((e) => e.source === 'mapped' && e.accessibility === 'unknown')).toBe(
-			true
-		);
-		expect(new Set(entrances.map((e) => e.buildingId)).size).toBe(7);
+		const mapped = entrances.filter((e) => e.source === 'mapped');
+		const corrected = entrances.filter((e) => e.source === 'verified');
+		expect(mapped).toHaveLength(12);
+		expect(new Set(mapped.map((e) => e.buildingId)).size).toBe(7);
+		// One stair-free entrance each for Mike Loya Academic Services Building and Union West.
+		expect(corrected.map((e) => e.buildingId).sort()).toEqual(['b334627353', 'b423676556']);
+		expect(mapped.length + corrected.length).toBe(entrances.length);
+		expect(entrances.every((e) => e.accessibility === 'unknown')).toBe(true);
 	});
 });
 
