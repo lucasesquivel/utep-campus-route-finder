@@ -13,13 +13,13 @@ export. The automated checks for these facts are in
 | Downloaded  | Overpass API, OSM data as of 2026-11-10                                                  |
 | Area        | Map view around campus: lat 31.7621 to 31.7771, lng -106.5105 to -106.4918               |
 | Query       | `way["highway"]`, `way["building"]` and `node["entrance"]` in the view, with their nodes |
-| Corrections | `static/data/campus-corrections.json` (empty so far; see below)                          |
+| Corrections | `static/data/campus-corrections.json` (2 candidate entrances; see below)                 |
 | License     | ODbL. Credit "© OpenStreetMap contributors" wherever the data is shown                   |
 
 The app loads it in `src/lib/server/campus.ts` (`DiskOsmCampusDataSource`) with inferred
-entrances at 45 m and the DEM elevations from `static/data/campus-elevation.json`. That loader
-does not apply the corrections file yet. `OsmCampusDataSource` is the Campus Data source that
-does, and it is what `CampusRealData.test.ts` uses:
+entrances at 45 m, the DEM elevations from `static/data/campus-elevation.json`, and the
+corrections file. `OsmCampusDataSource` applies the same corrections, and it is what
+`CampusRealData.test.ts` uses:
 
 ```ts
 new CampusRepository(
@@ -80,10 +80,29 @@ Hall, Health Sciences and Nursing (2), Sun Bowl Parking Garage (2), and Lhakhang
    start or end inside one will fail as unreachable.
 5. **Buildings outside the supported scope.** The map view includes neighbors such as McDonald's,
    Hilton Garden Inn, Providence Memorial Hospital and Mesa Hills Healthcare Residence, and
-   distant facilities such as Larry K. Durham Sports Center. The team scoped the app to the
-   connected inner-campus network; `BuildingCatalog` excludes these from the selector, while
-   Campus Data keeps them as facts.
+   distant facilities such as Larry K. Durham Sports Center (which is also on a path fragment
+   disconnected from campus). The supported scope is the inner-campus polygon in
+   `static/data/campus-boundary.json`: the convex hull of the 45 supported buildings' footprints,
+   expanded by 30 m. `BuildingCatalog` offers only buildings whose centroid is inside it, while
+   Campus Data keeps the others as facts. Memorial Gym and Holliday Hall are inside the scope.
+   `src/lib/integration/CampusScope.integration.test.ts` checks that every offered building is
+   inside the boundary and can be reached from the University Library in all three modes.
 6. **No step counts.** Stairs have no `step_count`, so Easy uses its default per-flight penalty.
+
+## Entrance corrections
+
+| Building                             | Problem                                         | Correction                                       |
+| ------------------------------------ | ----------------------------------------------- | ------------------------------------------------ |
+| Mike Loya Academic Services Building | Inferred entrance reachable only by stairs; ADA | Entrance at stair-free path point `n13784099370` |
+|                                      | routes returned NO_ROUTE                        | (about 25 m from the building center)            |
+| Union West                           | Inferred entrance reachable only by stairs; ADA | Entrance at stair-free path point `n9802146258`  |
+|                                      | routes returned NO_ROUTE                        | (about 17 m from the building center)            |
+
+Both are candidates from the 2026-11-26 data audit and must be confirmed on site; their notes
+in the corrections file say so until then. Routes to Business Administration, Hertzog Building,
+Schuster Parking Garage and Advanced Manufacturing and Aerospace are 2 to 3 times the
+straight-line distance, which suggests their inferred entrances are on the wrong side; check
+those doors next.
 
 ## How to close the gaps
 

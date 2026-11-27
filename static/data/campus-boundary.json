@@ -1,0 +1,66 @@
+{
+	"type": "Feature",
+	"properties": {
+		"name": "UTEP inner campus (supported routing scope)",
+		"note": "Convex hull of the footprints of the 45 supported inner-campus buildings in the 2026-11-10 OSM export, expanded by 30 m. A building is offered in the selector only if its centroid is inside this polygon. Regenerate after adding or removing supported buildings."
+	},
+	"geometry": {
+		"type": "Polygon",
+		"coordinates": [
+			[
+				[
+					-106.509034,
+					31.770152
+				],
+				[
+					-106.506148,
+					31.766114
+				],
+				[
+					-106.503895,
+					31.764972
+				],
+				[
+					-106.503663,
+					31.765106
+				],
+				[
+					-106.502417,
+					31.765872
+				],
+				[
+					-106.501997,
+					31.766132
+				],
+				[
+					-106.500768,
+					31.76819
+				],
+				[
+					-106.503853,
+					31.775493
+				],
+				[
+					-106.504399,
+					31.77618
+				],
+				[
+					-106.504928,
+					31.776777
+				],
+				[
+					-106.505318,
+					31.77651
+				],
+				[
+					-106.505565,
+					31.776202
+				],
+				[
+					-106.509034,
+					31.770152
+				]
+			]
+		]
+	}
+}
